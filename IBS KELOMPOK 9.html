@@ -1,0 +1,2387 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReCampus App - Collaborative Prototype</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    },
+                    colors: {
+                        'terra-dark': '#8B4513',
+                        'terra-main': '#760504',
+                        'terra-light': '#E8D0C2',
+                        'bg-cream': '#FDFBF7',
+                        'accent-green': '#4A7C59',
+                        'recampus-red': '#760504', 
+                        'recampus-dark': '#760504',
+                        'recampus-light': '#FDF6F3',
+                        'text-dark': '#2D2D2D',
+                        'seller-primary': '#760504',
+                        'seller-bg': '#FDF8F5',
+                        'maroon-cs': '#8B0000',
+                        'recampus-yellow': '#F2c335', // Kuning
+                        // New colors from design specs
+                        'design-black': '#292526',
+                        'design-red': '#B62B34',
+                        'design-pink': '#F2B3AF',
+                        'design-dark-grey': '#403A3C',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .slide-up { animation: slideUp 0.3s ease-out forwards; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+        /* Animation for Auth Screens */
+        .slide-left { animation: slideLeft 0.3s ease-out forwards; }
+        @keyframes slideLeft { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        .bg-login-gradient { background: linear-gradient(180deg, #760504 0%, #A0522D 100%); }
+        .glass { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border-top: 1px solid rgba(255,255,255,0.5); }
+        
+        /* Animasi halus untuk CS Button (Pulse Soft) */
+        @keyframes pulse-soft {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(139, 0, 0, 0.7); }
+            50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(139, 0, 0, 0); }
+        }
+        .animate-pulse-soft { animation: pulse-soft 2s infinite; }
+
+        /* Custom Radio Button Style (Untuk Checkout) */
+        .radio-selected { border-color: #760504; background-color: #FDF6F3; }
+        .radio-selected .radio-circle { border-color: #760504; background-color: #760504; }
+        
+        /* Custom floating animation for success graphic */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+            100% { transform: translateY(0px); }
+        }
+        .animate-float { animation: float 3s ease-in-out infinite; }
+    </style>
+</head>
+<body class="bg-gray-900 min-h-screen flex justify-center items-center font-sans antialiased text-text-dark selection:bg-terra-main selection:text-white py-10">
+
+    <div class="relative bg-white w-[393px] h-[852px] rounded-[55px] shadow-2xl overflow-hidden flex flex-col border-[12px] border-black ring-[4px] ring-gray-600/50 ml-4 mr-4">
+        
+        <div class="absolute top-[11px] left-1/2 transform -translate-x-1/2 w-[126px] h-[37px] bg-black rounded-full z-[100] flex justify-center items-center pointer-events-none">
+            <div class="absolute right-[22%] w-[10px] h-[10px] bg-[#1a1a1a] rounded-full blur-[0.5px]"></div>
+        </div>
+
+        <div class="absolute top-[18px] w-full px-7 flex justify-between items-center z-[90] text-xs font-medium pointer-events-none">
+            <span id="status-time" class="text-white time-indicator font-semibold ml-2">09:41</span>
+            <div id="status-icons" class="flex gap-1.5 text-white icon-indicator mr-1">
+                <i data-lucide="signal" class="w-3.5 h-3.5"></i>
+                <i data-lucide="wifi" class="w-3.5 h-3.5"></i>
+                <i data-lucide="battery-full" class="w-4 h-4"></i>
+            </div>
+        </div>
+
+        <!-- SPLASH SCREEN MODIFIED -->
+        <div id="view-splash" class="absolute inset-0 z-[80] bg-gray-900 flex flex-col justify-center items-center fade-in transition-transform duration-700 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1523381210434-271e8be1f52b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80');">
+            
+            <!-- Overlay Blur & Gelap -->
+            <div class="absolute inset-0 bg-grey/50 bg-white/20 backdrop-blur-[3px] z-0"></div>
+
+            <div class="relative z-10 flex flex-col items-center w-full">
+                <div class="mb-16 flex flex-col items-center animate-bounce">
+                    <!-- Logo (Using filter brightness to make it pop if it's dark, or just rely on png transparency) -->
+                    <img src= "https://raw.githubusercontent.com/abelliaayu28/FINALPROJECTIBS/refs/heads/main/RECAMPUS%20TAMPILAN%20DEPAN.png" alt="ReCampus" class="w-75 object-contain drop-shadow-2xl">
+                </div>
+                
+                <button onclick="enterApp()" class="group relative px-10 py-4 bg-white/90 border-2 border-transparent rounded-full shadow-[0px_4px_15px_rgba(0,0,0,0.3)] hover:scale-105 hover:bg-white transition-all duration-300">
+                    <span class="text-lg font-bold text-recampus-red tracking-wide">Get Started</span>
+                </button>
+                
+                <p class="absolute -bottom-32 text-xs text-yellow-500 font-medium tracking-widest uppercase mt-10">Reuse • Relove • Repeat</p>
+            </div>
+        </div>
+
+        <!-- Login View -->
+        <div id="view-login" class="absolute inset-0 z-50 bg-white flex flex-col justify-center px-8 hidden transition-transform duration-500 overflow-y-auto">
+            <div class="absolute top-0 right-0 w-40 h-40 bg-orange-100 rounded-bl-full opacity-50 -z-10"></div>
+            
+            <div class="text-center mb-8 mt-10">
+                <h1 class="text-3xl font-bold text-recampus-red mb-2">Login here</h1>
+                <h2 class="text-lg font-bold text-gray-800 max-w-[250px] mx-auto leading-tight">Welcome back you've been missed!</h2>
+            </div>
+
+            <div class="space-y-5">
+                <div class="flex bg-gray-100 p-1 rounded-xl shadow-inner mb-4">
+                    <button id="btn-role-buyer" onclick="setRole('buyer')" class="flex-1 py-2.5 rounded-lg bg-white text-recampus-red text-sm font-bold shadow-sm transition-all border border-gray-200">Pembeli</button>
+                    <button id="btn-role-seller" onclick="setRole('seller')" class="flex-1 py-2.5 rounded-lg text-gray-500 text-sm font-bold hover:bg-gray-200 transition-all">Penjual</button>
+                </div>
+
+                <div class="bg-gray-50 rounded-xl px-4 py-3 border-2 border-transparent focus-within:border-recampus-red focus-within:bg-white transition-colors">
+                    <input type="email" placeholder="Email / Username" class="w-full bg-transparent outline-none text-sm font-medium text-gray-700 placeholder-gray-400">
+                </div>
+                
+                <div class="bg-gray-50 rounded-xl px-4 py-3 border-2 border-transparent focus-within:border-recampus-red focus-within:bg-white transition-colors relative">
+                    <input type="password" placeholder="Password" class="w-full bg-transparent outline-none text-sm font-medium text-gray-700 placeholder-gray-400">
+                </div>
+
+                <div class="flex justify-end">
+                    <button class="text-xs font-bold text-recampus-red hover:underline">Forgot password?</button>
+                </div>
+
+                <button onclick="handleLogin()" class="w-full bg-recampus-red text-white font-bold py-4 rounded-xl shadow-lg hover:bg-recampus-dark transition active:scale-95">
+                    Sign in
+                </button>
+
+                <button onclick="goToSignUp()" class="w-full text-gray-500 text-sm font-semibold py-2 hover:text-recampus-red transition">
+                    Create new account
+                </button>
+            </div>
+
+            <div class="mt-8 text-center">
+                <p class="text-xs font-bold text-recampus-red mb-4">Or continue with</p>
+                <div class="flex justify-center gap-4">
+                    <button class="bg-gray-100 p-2.5 rounded-xl hover:bg-gray-200 transition"><img src="https://cdn-icons-png.flaticon.com/512/300/300221.png" width="20"></button>
+                    <button class="bg-gray-100 p-2.5 rounded-xl hover:bg-gray-200 transition"><img src="https://cdn-icons-png.flaticon.com/512/5968/5968764.png" width="20"></button>
+                    <button class="bg-gray-100 p-2.5 rounded-xl hover:bg-gray-200 transition"><img src="https://cdn-icons-png.flaticon.com/512/3670/3670051.png" width="20"></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Signup View -->
+        <div id="view-signup" class="absolute inset-0 z-[55] bg-white flex flex-col justify-center px-8 hidden transition-transform duration-500 overflow-y-auto">
+            <div class="absolute top-0 right-0 w-40 h-40 bg-orange-100 rounded-bl-full opacity-50 -z-10"></div>
+            
+            <button onclick="backToLogin()" class="absolute top-14 left-8 text-gray-800 hover:bg-gray-100 p-2 rounded-full transition">
+                <i data-lucide="arrow-left" class="w-6 h-6"></i>
+            </button>
+
+            <div class="text-center mb-6 mt-16">
+                <h1 id="signup-title" class="text-3xl font-bold text-recampus-red mb-2">Create Account</h1>
+                <p id="signup-subtitle" class="text-sm text-gray-500 max-w-[240px] mx-auto">Gabung komunitas ReCampus sekarang!</p>
+            </div>
+
+            <div class="space-y-4">
+                <div class="bg-gray-50 rounded-xl px-4 py-3 border-2 border-transparent focus-within:border-recampus-red focus-within:bg-white transition-colors">
+                    <input type="text" placeholder="Nama Lengkap" class="w-full bg-transparent outline-none text-sm font-medium text-gray-700 placeholder-gray-400">
+                </div>
+
+                <div class="bg-gray-50 rounded-xl px-4 py-3 border-2 border-transparent focus-within:border-recampus-red focus-within:bg-white transition-colors">
+                    <input type="text" placeholder="Asal Kampus (Contoh: ITS)" class="w-full bg-transparent outline-none text-sm font-medium text-gray-700 placeholder-gray-400">
+                </div>
+
+                <div class="bg-gray-50 rounded-xl px-4 py-3 border-2 border-transparent focus-within:border-recampus-red focus-within:bg-white transition-colors">
+                    <input type="email" placeholder="Email" class="w-full bg-transparent outline-none text-sm font-medium text-gray-700 placeholder-gray-400">
+                </div>
+                
+                <div class="bg-gray-50 rounded-xl px-4 py-3 border-2 border-transparent focus-within:border-recampus-red focus-within:bg-white transition-colors">
+                    <input type="password" placeholder="Password" class="w-full bg-transparent outline-none text-sm font-medium text-gray-700 placeholder-gray-400">
+                </div>
+
+                <div class="bg-gray-50 rounded-xl px-4 py-3 border-2 border-transparent focus-within:border-recampus-red focus-within:bg-white transition-colors">
+                    <input type="password" placeholder="Confirm Password" class="w-full bg-transparent outline-none text-sm font-medium text-gray-700 placeholder-gray-400">
+                </div>
+
+                <div id="seller-verification-section" class="hidden space-y-4 pt-2 border-t border-dashed border-gray-300 fade-in">
+                    <p class="text-xs font-bold text-recampus-red uppercase tracking-wide text-center">Verifikasi Data Penjual</p>
+                    
+                    <div class="bg-gray-50 rounded-xl px-4 py-3 border-2 border-transparent hover:border-recampus-red transition-colors">
+                        <label class="block text-xs font-bold text-gray-500 mb-2">Upload Foto KTM</label>
+                        <input type="file" accept="image/*" class="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-orange-50 file:text-recampus-red hover:file:bg-orange-100 cursor-pointer">
+                    </div>
+
+                    <div class="bg-gray-50 rounded-xl px-4 py-3 border-2 border-transparent hover:border-recampus-red transition-colors">
+                        <label class="block text-xs font-bold text-gray-500 mb-2">Upload Foto KTP</label>
+                        <input type="file" accept="image/*" class="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-orange-50 file:text-recampus-red hover:file:bg-orange-100 cursor-pointer">
+                    </div>
+                </div>
+                <button onclick="handleLogin()" class="w-full bg-recampus-red text-white font-bold py-2 rounded-xl shadow-lg hover:bg-recampus-dark transition active:scale-95 mt-2">
+                    Sign up
+                </button>
+
+                 <button onclick="backToLogin()" class="w-full text-gray-500 text-sm font-semibold py-2 hover:text-recampus-red transition">
+                    Already have an account
+                </button>
+            </div>
+        </div>
+
+        <!-- Seller App View -->
+        <div id="view-seller-app" class="absolute inset-0 z-[60] bg-seller-bg flex flex-col hidden transition-transform duration-300">
+            <div class="bg-seller-primary p-4 pt-14 text-white flex justify-between items-center shadow-md">
+            <div>
+                <div class="flex items-center gap-2 mb-0.5">
+                    <i data-lucide="store" class="w-6 h-6 text-yellow-400 fill-yellow-400"></i>
+                    <h1 class="text-xl font-bold">ReCampus Seller</h1>
+                </div>
+                <p id="seller-header-subtitle" class="text-xs opacity-90">Kelola tokomu dari sini</p>
+            </div>
+            
+            <div class="relative">
+                <i data-lucide="bell" class="w-6 h-6"></i>
+                <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">3</span>
+            </div>
+        </div>
+
+            <div id="seller-content-area" class="flex-1 overflow-y-auto no-scrollbar pb-24">
+                
+
+                <!-- Seller Home Tab ==========================================================================================================================-->
+                <div id="seller-tab-home" class="p-4 space-y-6 fade-in">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div onclick="openIncomeStats()" class="col-span-2 bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center cursor-pointer hover:shadow-md transition-all active:scale-95">
+                            <div>
+                                <div class="flex items-center gap-2 mb-1 text-gray-500">
+                                    <i data-lucide="trending-up" class="w-4 h-4"></i>
+                                    <span class="text-sm font-medium">Pendapatan Bulan Ini</span>
+                                </div>
+                                <p class="text-2xl font-bold text-gray-800">Rp 1.173.200</p>
+                            </div>
+                            <div class="bg-orange-50 p-2 rounded-full text-seller-primary">
+                                <i data-lucide="wallet" class="w-6 h-6"></i>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                            <div class="flex items-center gap-2 mb-2 text-gray-500"><i data-lucide="shopping-bag" class="w-4 h-4"></i><span class="text-xs font-medium">Barang Terjual</span></div>
+                            <p class="text-lg font-bold text-gray-800">15 <span class="text-xs font-normal text-gray-400">item</span></p>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                            <div class="flex items-center gap-2 mb-2 text-gray-500"><i data-lucide="users" class="w-4 h-4"></i><span class="text-xs font-medium">Pengunjung</span></div>
+                            <p class="text-lg font-bold text-gray-800">124 <span class="text-xs font-normal text-green-500">▲ 12%</span></p>
+                        </div>
+                    </div>
+
+                    <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 flex justify-between items-center shadow-sm">
+                        <div>
+                            <h3 class="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-1">MARKET INSIGHT</h3>
+                            <p class="text-sm text-gray-700">Permintaan <span class="font-bold">Buku Teknik</span> naik <span class="text-green-600 font-bold">▲ 15%</span> minggu ini.</p>
+                        </div>
+                        <div class="h-8 w-8 flex items-end justify-center gap-0.5 opacity-60">
+                            <div class="w-1 bg-blue-400 h-3 rounded-t"></div>
+                            <div class="w-1 bg-blue-400 h-5 rounded-t"></div>
+                            <div class="w-1 bg-blue-400 h-2 rounded-t"></div>
+                            <div class="w-1 bg-blue-400 h-6 rounded-t"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <h2 class="text-sm font-bold text-gray-700">Produk Saya</h2>
+                            <button class="text-seller-primary text-xs font-bold">Lihat Semua</button>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex gap-3">
+                                <div class="w-16 h-16 bg-gray-200 rounded-lg flex-shrink-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1542291026-7eec264c27ff?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&q=80')"></div>
+                                <div class="flex-1"><h3 class="font-medium text-sm text-gray-800 line-clamp-1">Sepatu Nike Air Jordan Bekas</h3><p class="text-xs text-gray-500 mt-1">Stok: 5 • Terjual: 2</p><p class="text-sm font-bold mt-1 text-gray-800">Rp 550.000</p></div>
+                                <button class="text-gray-400 hover:text-gray-600"><i data-lucide="settings" class="w-4 h-4"></i></button>
+                            </div>
+                            <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex gap-3">
+                                <div class="w-16 h-16 bg-gray-200 rounded-lg flex-shrink-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1591047139829-d91aecb6caea?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&q=80')"></div>
+                                <div class="flex-1"><h3 class="font-medium text-sm text-gray-800 line-clamp-1">Jaket Denim Vintage</h3><p class="text-xs text-gray-500 mt-1">Stok: 5 • Terjual: 10</p><p class="text-sm font-bold mt-1 text-gray-800">Rp 120.000</p></div>
+                                <button class="text-gray-400 hover:text-gray-600"><i data-lucide="settings" class="w-4 h-4"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                                <!-- SELLER PROMO TAB (NEW - Moved button to profile, content stays hidden for switching) -->
+                <div id="seller-tab-promo" class="p-4 space-y-6 hidden fade-in">
+                    <!-- Step 1: Pilih Tipe Promosi -->
+                    <div id="promo-step-1" class="fade-in">
+                        <h2 class="text-sm font-bold text-gray-700 mb-3">Pilih Jenis Promosi</h2>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div onclick="selectPromoType('video')" class="bg-white p-5 rounded-2xl shadow-sm border border-white hover:border-recampus-red cursor-pointer transition group">
+                                <div class="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center text-recampus-red mb-3 group-hover:bg-recampus-red group-hover:text-white transition">
+                                    <i data-lucide="video" class="w-6 h-6"></i>
+                                </div>
+                                <h3 class="font-bold text-gray-800 text-sm">Promosi Video</h3>
+                                <p class="text-xs text-gray-500 mt-1 leading-relaxed">Boost produk lewat video pendek.</p>
+                                <span class="inline-block mt-2 text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded">Max 2/Minggu</span>
+                            </div>
+                            <div onclick="selectPromoType('live')" class="bg-white p-5 rounded-2xl shadow-sm border border-white hover:border-recampus-red cursor-pointer transition group">
+                                <div class="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 mb-3 group-hover:bg-blue-600 group-hover:text-white transition">
+                                    <i data-lucide="radio" class="w-6 h-6"></i>
+                                </div>
+                                <h3 class="font-bold text-gray-800 text-sm">Live TikTok</h3>
+                                <p class="text-xs text-gray-500 mt-1 leading-relaxed">Promosi langsung via Live.</p>
+                                <span class="inline-block mt-2 text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded">Kuota Terbatas</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- (Steps 2-4 remain same for functionality) -->
+                    <div id="promo-step-2" class="hidden fade-in">
+                        <div class="flex items-center gap-2 mb-4">
+                            <button onclick="backToPromoStep(1)" class="p-1 rounded-full hover:bg-gray-200"><i data-lucide="arrow-left" class="w-4 h-4 text-gray-600"></i></button>
+                            <h2 class="text-sm font-bold text-gray-700">Pilih Produk (Max 2)</h2>
+                        </div>
+                        <div class="space-y-3">
+                            <label class="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-100 cursor-pointer hover:bg-gray-50">
+                                <input type="checkbox" name="promo-product" class="w-4 h-4 accent-recampus-red">
+                                <div class="w-12 h-12 bg-gray-200 rounded-lg bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1542291026-7eec264c27ff?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&q=80')"></div>
+                                <div class="flex-1"><p class="text-sm font-bold text-gray-800">Sepatu Nike Air</p><p class="text-xs text-gray-500">Stok: 5</p></div>
+                            </label>
+                             <label class="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-100 cursor-pointer hover:bg-gray-50">
+                                <input type="checkbox" name="promo-product" class="w-4 h-4 accent-recampus-red">
+                                <div class="w-12 h-12 bg-gray-200 rounded-lg bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1591047139829-d91aecb6caea?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&q=80')"></div>
+                                <div class="flex-1"><p class="text-sm font-bold text-gray-800">Jaket Denim</p><p class="text-xs text-gray-500">Stok: 10</p></div>
+                            </label>
+                        </div>
+                        <button onclick="confirmPromoProducts()" class="w-full mt-6 bg-recampus-red text-white font-bold py-3 rounded-xl shadow-lg hover:bg-maroon-cs transition">Lanjut Pilih Jadwal</button>
+                    </div>
+                    <div id="promo-step-3" class="hidden fade-in">
+                        <div class="flex items-center gap-2 mb-4">
+                            <button onclick="backToPromoStep(2)" class="p-1 rounded-full hover:bg-gray-200"><i data-lucide="arrow-left" class="w-4 h-4 text-gray-600"></i></button>
+                            <h2 class="text-sm font-bold text-gray-700">Pilih Jadwal Tayang</h2>
+                        </div>
+                        <div class="bg-white rounded-t-xl p-4 border-b border-gray-100 flex justify-between items-center"><span class="font-bold text-gray-800">Desember 2025</span><div class="flex gap-2"><div class="w-2 h-2 rounded-full bg-green-500"></div><span class="text-[10px] text-gray-400">Ada</span><div class="w-2 h-2 rounded-full bg-red-500"></div><span class="text-[10px] text-gray-400">Penuh</span></div></div>
+                        <div class="bg-white rounded-b-xl p-4 mb-4">
+                            <div class="grid grid-cols-7 gap-2 text-center mb-2"><span class="text-[10px] text-gray-400">Sn</span><span class="text-[10px] text-gray-400">Sl</span><span class="text-[10px] text-gray-400">Rb</span><span class="text-[10px] text-gray-400">Km</span><span class="text-[10px] text-gray-400">Jm</span><span class="text-[10px] text-gray-400">Sb</span><span class="text-[10px] text-gray-400">Mg</span></div>
+                            <div id="calendar-grid" class="grid grid-cols-7 gap-2"></div>
+                        </div>
+                        <div id="time-selection-area" class="hidden">
+                            <h3 class="text-xs font-bold text-gray-600 mb-2">Pilih Jam Live</h3>
+                            <div class="flex gap-2">
+                                <button onclick="selectTime(this)" class="flex-1 py-2 border border-gray-200 rounded-lg text-xs font-medium hover:border-recampus-red hover:text-recampus-red">19:00</button>
+                                <button onclick="selectTime(this)" class="flex-1 py-2 border border-gray-200 rounded-lg text-xs font-medium hover:border-recampus-red hover:text-recampus-red">20:00</button>
+                                <button onclick="selectTime(this)" class="flex-1 py-2 border border-gray-200 rounded-lg text-xs font-medium hover:border-recampus-red hover:text-recampus-red">21:00</button>
+                            </div>
+                        </div>
+                        <button onclick="submitPromoBooking()" class="w-full mt-6 bg-recampus-red text-white font-bold py-3 rounded-xl shadow-lg hover:bg-maroon-cs transition">Konfirmasi Booking</button>
+                    </div>
+                    <div id="promo-step-success" class="hidden fade-in text-center py-10">
+                        <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce"><i data-lucide="check" class="w-10 h-10 text-green-600"></i></div>
+                        <h2 class="text-xl font-bold text-gray-800">Booking Berhasil!</h2>
+                        <p class="text-sm text-gray-500 mt-2 mb-6">Jadwal promosimu sudah tersimpan. Tim kami akan menghubungi untuk materi promosi.</p>
+                        <button onclick="switchSellerTab('home')" class="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium text-sm">Kembali ke Beranda</button>
+                    </div>
+                </div>
+
+                <!-- UPLOAD JUAL PRODUK ============================================================================================================-->
+                <div id="seller-tab-upload" class="p-4 space-y-6 hidden fade-in">
+                    <div>
+                        <h3 class="text-sm font-bold text-gray-700 mb-3">Foto Produk</h3>
+                        <div class="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
+                            <button class="w-24 h-24 rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 bg-white flex-shrink-0"><i data-lucide="camera" class="w-6 h-6"></i><span class="text-[10px] mt-1">Ambil Foto</span></button>
+                            <button class="w-24 h-24 rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 bg-white flex-shrink-0"><i data-lucide="image" class="w-6 h-6"></i><span class="text-[10px] mt-1">Galeri</span></button>
+                            <div class="w-24 h-24 rounded-xl bg-gray-200 flex-shrink-0 relative overflow-hidden"><img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80" class="w-full h-full object-cover opacity-80" /><button class="absolute top-1 right-1 bg-black/50 text-white rounded-full p-0.5"><i data-lucide="x" class="w-3 h-3"></i></button></div>
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <div><label class="text-xs font-bold text-gray-600 uppercase tracking-wide">Nama Produk</label><input type="text" id="input-nama" placeholder="Contoh: Kemeja Flannel Uniqlo Size L" class="w-full mt-1 p-3 rounded-xl border border-gray-200 bg-white text-sm font-medium" /></div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><label class="text-xs font-bold text-gray-600 uppercase tracking-wide">Harga (Rp)</label><input type="number" id="input-harga" placeholder="150000" class="w-full mt-1 p-3 rounded-xl border border-gray-200 bg-white text-sm font-medium" /></div>
+                            <div><label class="text-xs font-bold text-gray-600 uppercase tracking-wide">Stok</label><input type="number" id="input-stok" placeholder="1" class="w-full mt-1 p-3 rounded-xl border border-gray-200 bg-white text-sm font-medium" /></div>
+                        </div>
+                        <div><label class="text-xs font-bold text-gray-600 uppercase tracking-wide">Kategori</label><select id="input-kategori" class="w-full mt-1 p-3 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-700"><option>Buku & Alat Tulis</option><option>Fashion</option><option>Perabot</option><option>Elektronik</option></option><option>Skincare & MakeUp</option></select></div>
+                        <div><label class="text-xs font-bold text-gray-600 uppercase tracking-wide">Deskripsi</label><textarea id="input-deskripsi" rows="4" placeholder="Jelaskan kondisi barang, minus (jika ada), dan alasan jual..." class="w-full mt-1 p-3 rounded-xl border border-gray-200 bg-white text-sm text-gray-600"></textarea></div>
+                    </div>
+                    <div class="pt-4 pb-8"><button onclick="checkUploadRequirements()" class="w-full bg-recampus-red text-white font-bold py-4 rounded-xl shadow-lg hover:opacity-90 transition-opacity">Mulai Jual Barang Ini</button></div>
+                </div>
+
+                <!-- KEUANGAN SELLER  ============================================================================================================-->
+                <div id="seller-tab-finance" class="p-4 space-y-6 hidden fade-in">
+                    <div class="bg-seller-primary rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
+                        <div class="absolute -right-4 -top-4 w-24 h-24 bg-white opacity-10 rounded-full"></div>
+                        <div class="absolute -left-4 -bottom-4 w-32 h-32 bg-white opacity-10 rounded-full"></div>
+                        <p class="text-sm opacity-90 mb-1">Saldo Anda</p>
+                        <h2 class="text-3xl font-bold mb-6">Rp 1.450.000</h2>
+                        <div class="flex gap-3"><button class="flex-1 bg-white text-orange-700 py-2 rounded-lg text-sm font-bold shadow-sm">Tarik Dana</button><button class="flex-1 bg-orange-700 bg-opacity-30 text-white py-2 rounded-lg text-sm font-bold border border-white border-opacity-20">Detail</button></div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
+                        <div class="flex items-center gap-3"><div class="bg-blue-100 p-2 rounded-lg text-blue-600"><i data-lucide="credit-card" class="w-5 h-5"></i></div><div><p class="text-xs text-gray-500">Rekening Utama</p><p class="text-sm font-bold text-gray-800">BCA •••• 8899</p></div></div><button class="text-gray-400"><i data-lucide="settings" class="w-4 h-4"></i></button>
+                    </div>
+                    <div>
+                        <h2 class="text-sm font-bold text-gray-700 mb-3">Riwayat Transaksi</h2>
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 divide-y divide-gray-100">
+                            <div class="p-4 flex justify-between items-center"><div><p class="text-sm font-medium text-gray-800">Penjualan - Sepatu Nike</p><p class="text-xs text-gray-400 mt-0.5">04 Des 2025, 10:30</p></div><p class="text-sm font-bold text-green-600">+ Rp 550.000</p></div>
+                            <div class="p-4 flex justify-between items-center"><div><p class="text-sm font-medium text-gray-800">Penarikan Dana</p><p class="text-xs text-gray-400 mt-0.5">02 Des 2025, 14:20</p></div><p class="text-sm font-bold text-gray-800">- Rp 120.000</p></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seller Profile Tab -->
+                <div id="seller-tab-profile" class="p-4 space-y-6 hidden fade-in">
+                    <div class="flex flex-col items-center py-4">
+                        <div class="w-24 h-24 rounded-full border-4 border-white shadow-lg bg-gray-200 mb-3 relative bg-cover bg-center" style="background-image: url('https://raw.githubusercontent.com/abelliaayu28/FINALPROJECTIBS/refs/heads/main/james%20sidoarjo.jpeg')">
+                            <div id="seller-verified-badge" class="absolute bottom-0 right-0 bg-blue-500 p-1.5 rounded-full text-white border-2 border-white hidden">
+                                <i data-lucide="check" class="w-3.5 h-3.5" stroke-width="4"></i>
+                            </div>
+                        </div>
+                        <h2 class="text-xl font-bold text-gray-800 flex items-center gap-1">
+                            James Darjo
+                            <span id="text-verified-label" class="hidden text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded border border-blue-200">Verified</span>
+                        </h2>
+                        <div class="flex items-center gap-1 mt-1">
+                            <i data-lucide="star" class="w-3.5 h-3.5 text-yellow-400 fill-yellow-400"></i>
+                            <span class="text-sm font-medium text-gray-600">4.8</span>
+                            <span class="text-xs text-gray-400">(7 Ulasan)</span>
+                        </div>
+                    </div>
+
+                    <div onclick="openSellerPro()" class="bg-[#1a1a1a] rounded-xl p-4 flex justify-between items-center mb-6 cursor-pointer hover:opacity-95 transition">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-yellow-600/20 p-2 rounded-lg border border-yellow-600/50">
+                                <i data-lucide="crown" class="w-5 h-5 text-yellow-500"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-yellow-500 font-bold text-sm">Seller Pro</h3>
+                                <p class="text-[10px] text-gray-400">Tingkatkan profit bisnismu</p>
+                            </div>
+                        </div>
+                        <button class="bg-yellow-500 text-[#1a1a1a] px-4 py-1.5 rounded-lg text-xs font-bold">Upgrade</button>
+                    </div>
+
+                    <div class="mb-6">
+                        <h2 class="text-sm font-bold text-gray-700 mb-3 ml-1">Status Pesanan</h2>
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex justify-between">
+                            <div class="flex flex-col items-center gap-1 relative w-1/4"><div class="p-2 rounded-full bg-orange-100 text-orange-600"><i data-lucide="box" class="w-6 h-6"></i></div><span class="text-[10px] font-medium text-gray-600 text-center leading-tight">Perlu Dikirim</span><span class="absolute top-0 right-2 bg-red-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full border-2 border-white">2</span></div>
+                            <div class="flex flex-col items-center gap-1 relative w-1/4"><div class="p-2 rounded-full bg-gray-50 text-gray-400"><i data-lucide="truck" class="w-6 h-6"></i></div><span class="text-[10px] font-medium text-gray-600 text-center leading-tight">Dikirim</span><span class="absolute top-0 right-2 bg-red-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full border-2 border-white">1</span></div>
+                            <div class="flex flex-col items-center gap-1 relative w-1/4"><div class="p-2 rounded-full bg-gray-50 text-gray-400"><i data-lucide="check-circle" class="w-6 h-6"></i></div><span class="text-[10px] font-medium text-gray-600 text-center leading-tight">Selesai</span></div>
+                            <div class="flex flex-col items-center gap-1 relative w-1/4"><div class="p-2 rounded-full bg-gray-50 text-gray-400"><i data-lucide="alert-circle" class="w-6 h-6"></i></div><span class="text-[10px] font-medium text-gray-600 text-center leading-tight">Dibatalkan</span></div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 divide-y divide-gray-100">
+                        <button onclick="openProductSettings()" class="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                            <div class="flex items-center gap-3 text-gray-700">
+                                <i data-lucide="package" class="w-5 h-5 text-gray-400"></i>
+                                <span class="text-sm font-medium">Pengaturan Produk</span>
+                            </div>
+                            <i data-lucide="chevron-right" class="w-4 h-4 text-gray-300"></i>
+                        </button>
+                        <!-- NEW PROMO BUTTON IN PROFILE -->
+                        <button onclick="switchSellerTab('promo')" class="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                            <div class="flex items-center gap-3 text-gray-700">
+                                <i data-lucide="megaphone" class="w-5 h-5 text-gray-400"></i>
+                                <span class="text-sm font-medium">Promosi Toko</span>
+                            </div>
+                            <i data-lucide="chevron-right" class="w-4 h-4 text-gray-300"></i>
+                        </button>
+
+                        <button onclick="openSellerEditProfile()" class="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors bg-orange-50/50">
+                            <div class="flex items-center gap-3 text-gray-800">
+                                <i data-lucide="user-cog" class="w-5 h-5 text-seller-primary"></i>
+                                <span class="text-sm font-bold text-seller-primary">Edit Profil Toko</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span id="menu-verified-status" class="text-[10px] text-red-500 font-medium">Belum Verifikasi</span>
+                                <i data-lucide="chevron-right" class="w-4 h-4 text-seller-primary"></i>
+                            </div>
+                        </button>
+
+                        <button class="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"><div class="flex items-center gap-3 text-gray-700"><i data-lucide="map-pin" class="w-5 h-5 text-gray-400"></i><span class="text-sm font-medium">Alamat Toko</span></div><i data-lucide="chevron-right" class="w-4 h-4 text-gray-300"></i></button>
+                        <button class="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"><div class="flex items-center gap-3 text-gray-700"><i data-lucide="star" class="w-5 h-5 text-gray-400"></i><span class="text-sm font-medium">Ulasan Pembeli</span></div><i data-lucide="chevron-right" class="w-4 h-4 text-gray-300"></i></button>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 divide-y divide-gray-100">
+                        <button onclick="switchToBuyerMode()" class="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"><div class="flex items-center gap-3 text-red-600"><i data-lucide="users" class="w-5 h-5"></i><span class="text-sm font-medium">Beralih ke Akun Pembeli</span></div><i data-lucide="chevron-right" class="w-4 h-4 text-gray-300"></i></button>
+                        <button onclick="logout()" class="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"><div class="flex items-center gap-3 text-red-500"><i data-lucide="log-out" class="w-5 h-5"></i><span class="text-sm font-medium">Keluar / Logout</span></div></button>
+                    </div>
+                    <p class="text-center text-xs text-gray-400 pt-4">ReCampus Seller v1.0.2</p>
+                </div>
+            </div>
+
+            <div class="absolute bottom-0 left-0 w-full bg-white border-t border-gray-200 grid grid-cols-4 py-2 pb-4 z-50 rounded-b-[24px]">
+                <button onclick="switchSellerTab('home')" id="s-nav-home" class="flex flex-col items-center justify-center space-y-1 transition-colors text-seller-primary"><i data-lucide="home" class="w-[22px] h-[22px]"></i><span class="text-[10px] font-medium">Beranda</span></button>
+                <button onclick="switchSellerTab('upload')" id="s-nav-upload" class="flex flex-col items-center justify-center space-y-1 transition-colors text-gray-400"><div id="s-nav-upload-bg" class="p-1.5 rounded-xl border-2 border-gray-300 text-gray-400"><i data-lucide="plus" class="w-6 h-6" stroke-width="3"></i></div><span class="text-[10px] font-medium">Jual</span></button>
+                <button onclick="switchSellerTab('finance')" id="s-nav-finance" class="flex flex-col items-center justify-center space-y-1 transition-colors text-gray-400"><i data-lucide="wallet" class="w-[22px] h-[22px]"></i><span class="text-[10px] font-medium">Keuangan</span></button>
+                <button onclick="switchSellerTab('profile')" id="s-nav-profile" class="flex flex-col items-center justify-center space-y-1 transition-colors text-gray-400"><i data-lucide="user" class="w-[22px] h-[22px]"></i><span class="text-[10px] font-medium">Profil</span></button>
+            </div>
+        </div>
+
+        <!-- NEW VIEW: PRODUCT SETTINGS -->
+        <div id="view-product-settings" class="absolute inset-0 z-[70] bg-bg-cream flex flex-col hidden transition-transform duration-300 translate-x-full">
+            <div class="bg-white pt-14 pb-4 px-6 shadow-sm sticky top-0 z-30 flex items-center justify-between">
+                 <button onclick="closeProductSettings()" class="p-2 hover:bg-gray-50 rounded-full"><i data-lucide="arrow-left" class="w-6 h-6 text-gray-700"></i></button>
+                 <h1 class="text-recampus-red text-xl font-bold">Atur Produk</h1>
+                 <div class="w-10"></div>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto no-scrollbar pb-24 px-4 pt-4 space-y-3">
+                 <!-- Example: Verified Product -->
+                 <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex gap-3 items-center">
+                     <div class="w-16 h-16 bg-gray-200 rounded-lg flex-shrink-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1542291026-7eec264c27ff?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&q=80')"></div>
+                     <div class="flex-1">
+                         <div class="flex justify-between items-start">
+                             <h3 class="font-medium text-sm text-gray-800 line-clamp-1">Sepatu Nike Air Jordan</h3>
+                             <span class="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">Aktif</span>
+                         </div>
+                         <p class="text-xs text-gray-500 mt-1">Stok: 5</p>
+                         <div class="flex justify-between items-center mt-2">
+                             <p class="text-sm font-bold text-recampus-red">Rp 550.000</p>
+                             <div class="flex gap-2">
+                                 <button class="p-1.5 bg-gray-50 rounded text-gray-500 hover:text-recampus-red"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                                 <button class="p-1.5 bg-gray-50 rounded text-gray-500 hover:text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                             </div>
+                         </div>
+                     </div>
+                 </div>
+
+                 <!-- Example: Under Review Product (Electronics) -->
+                 <div class="bg-white p-3 rounded-xl shadow-sm border border-orange-100 flex gap-3 items-center">
+                     <div class="w-16 h-16 bg-gray-200 rounded-lg flex-shrink-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1596462502278-27bfdd403348?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&q=80')"></div>
+                     <div class="flex-1">
+                         <div class="flex justify-between items-start">
+                             <h3 class="font-medium text-sm text-gray-800 line-clamp-1">Laptop Gaming Bekas</h3>
+                             <span class="text-[10px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full font-bold">Ditinjau</span>
+                         </div>
+                         <p class="text-[10px] text-orange-500 mt-1 flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> Menunggu QC Fisik (Hub)</p>
+                         <div class="flex justify-between items-center mt-2">
+                             <p class="text-sm font-bold text-gray-400">Rp 5.500.000</p>
+                             <button class="text-[10px] font-bold text-orange-600 underline">Cek Status</button>
+                         </div>
+                     </div>
+                 </div>
+
+                 <!-- Example: Skincare (Verified) -->
+                 <div class="bg-white p-3 rounded-xl shadow-sm border border-green-50 flex gap-3 items-center">
+                     <div class="w-16 h-16 bg-gray-200 rounded-lg flex-shrink-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1620916566398-39f1143ab7be?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&q=80')"></div>
+                     <div class="flex-1">
+                         <div class="flex justify-between items-start">
+                             <h3 class="font-medium text-sm text-gray-800 line-clamp-1">Serum Wajah</h3>
+                             <div class="flex gap-1">
+                                <span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold flex items-center gap-0.5"><i data-lucide="check-circle" class="w-2 h-2"></i> Verified</span>
+                                <span class="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">Aktif</span>
+                             </div>
+                         </div>
+                         <p class="text-xs text-gray-500 mt-1">Stok: 2</p>
+                         <div class="flex justify-between items-center mt-2">
+                             <p class="text-sm font-bold text-recampus-red">Rp 85.000</p>
+                             <div class="flex gap-2">
+                                 <button class="p-1.5 bg-gray-50 rounded text-gray-500 hover:text-recampus-red"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                             </div>
+                         </div>
+                     </div>
+                 </div>
+
+                 <!-- Example: Skincare (Unverified) -->
+                 <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex gap-3 items-center">
+                     <div class="w-16 h-16 bg-gray-200 rounded-lg flex-shrink-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1616683693504-3ea7e9ad6fec?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&q=80')"></div>
+                     <div class="flex-1">
+                         <div class="flex justify-between items-start">
+                             <h3 class="font-medium text-sm text-gray-800 line-clamp-1">Sunscreen Bekas</h3>
+                             <span class="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">Aktif</span>
+                         </div>
+                         <p class="text-[10px] text-gray-400 mt-1 italic">Tanpa Struk Pembelian</p>
+                         <div class="flex justify-between items-center mt-2">
+                             <p class="text-sm font-bold text-recampus-red">Rp 30.000</p>
+                             <div class="flex gap-2">
+                                 <button class="p-1.5 bg-gray-50 rounded text-gray-500 hover:text-recampus-red"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                             </div>
+                         </div>
+                     </div>
+                 </div>
+            </div>
+        </div>
+
+        <!-- NEW MODAL: VERIFICATION ELECTRONIC (FISIK) -->
+        <div id="modal-verification-electronic" class="absolute inset-0 z-[100] hidden flex items-center justify-center bg-black/80 backdrop-blur-sm fade-in">
+            <div class="bg-white w-[85%] rounded-[2rem] p-6 text-center shadow-2xl relative">
+                <div class="bg-orange-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-white shadow-lg -mt-14">
+                    <i data-lucide="shield-alert" class="w-10 h-10 text-recampus-red"></i>
+                </div>
+                
+                <h2 class="text-xl font-bold text-gray-800 mb-2">Wajib QC Fisik</h2>
+                <div class="w-16 h-1 bg-recampus-red rounded-full mx-auto mb-4"></div>
+                
+                <p class="text-sm text-gray-600 mb-6 leading-relaxed">
+                    Untuk elektronik di atas <b>Rp 1.000.000</b>, barang wajib dikirim ke Hub ReCampus untuk pengecekan fisik sebelum tayang.
+                </p>
+
+                <div class="bg-gray-50 rounded-xl p-4 text-left space-y-3 mb-6 border border-gray-100">
+                    <div class="flex gap-3">
+                        <div class="bg-white p-1.5 rounded shadow-sm h-fit"><span class="text-xs font-bold text-recampus-red">1</span></div>
+                        <p class="text-xs text-gray-500">Klik lanjut & dapatkan kode resi pengiriman (Gratis).</p>
+                    </div>
+                    <div class="flex gap-3">
+                         <div class="bg-white p-1.5 rounded shadow-sm h-fit"><span class="text-xs font-bold text-recampus-red">2</span></div>
+                        <p class="text-xs text-gray-500">Tim kami akan mengecek kondisi (1x24 Jam).</p>
+                    </div>
+                    <div class="flex gap-3">
+                         <div class="bg-white p-1.5 rounded shadow-sm h-fit"><span class="text-xs font-bold text-recampus-red">3</span></div>
+                        <p class="text-xs text-gray-500">Jika lolos, barang akan tayang dengan badge <span class="text-green-600 font-bold">Verified</span>.</p>
+                    </div>
+                </div>
+
+                <button onclick="closeVerificationElectronic(true)" class="w-full bg-recampus-red text-white font-bold py-3.5 rounded-xl shadow-lg hover:opacity-90 transition active:scale-95">Lanjut Kirim Barang</button>
+                <button onclick="closeVerificationElectronic(false)" class="text-xs text-gray-400 mt-4 hover:text-gray-600 font-medium">Batal Jual</button>
+            </div>
+        </div>
+
+        <!-- NEW MODAL: VERIFICATION SKINCARE (STRUK) -->
+        <div id="modal-verification-skincare" class="absolute inset-0 z-[100] hidden flex items-center justify-center bg-black/80 backdrop-blur-sm fade-in">
+             <div class="bg-white w-[85%] rounded-[2rem] p-6 text-center shadow-2xl relative">
+                <div class="bg-blue-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-white shadow-lg -mt-14">
+                    <i data-lucide="receipt" class="w-10 h-10 text-blue-600"></i>
+                </div>
+                <h2 class="text-xl font-bold text-gray-800 mb-2">Upload Bukti Pembelian?</h2>
+                <p class="text-sm text-gray-500 mb-6 leading-relaxed">
+                    Upload foto struk/resi pembelian resmi untuk mendapatkan badge <span class="text-blue-600 font-bold">Verified</span>. Ini meningkatkan kepercayaan pembeli!
+                </p>
+
+                <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 mb-6 flex flex-col items-center justify-center text-center hover:bg-gray-50 hover:border-blue-500 transition cursor-pointer relative group">
+                    <input type="file" id="input-struk-modal" class="absolute inset-0 opacity-0 cursor-pointer" onchange="document.getElementById('struk-label').innerText = 'Struk Terpilih: image.jpg'; document.getElementById('btn-upload-struk').classList.remove('opacity-50', 'pointer-events-none')">
+                    <i data-lucide="upload-cloud" class="w-8 h-8 text-gray-400 mb-2 group-hover:text-blue-500"></i>
+                    <span id="struk-label" class="text-xs font-bold text-gray-500 group-hover:text-blue-500">Klik untuk upload foto struk</span>
+                </div>
+
+                <div class="space-y-3">
+                    <button id="btn-upload-struk" onclick="confirmSkincareUpload(true)" class="w-full bg-blue-600 text-white font-bold py-3.5 rounded-xl shadow-lg hover:opacity-90 transition active:scale-95 opacity-50 pointer-events-none">Upload & Dapat Badge</button>
+                    <button onclick="confirmSkincareUpload(false)" class="w-full bg-white border border-gray-200 text-gray-500 font-bold py-3.5 rounded-xl hover:bg-gray-50 transition active:scale-95">Jual Tanpa Badge</button>
+                </div>
+             </div>
+        </div>
+
+
+        <!-- NEW MODAL: UPLOAD SUCCESS -->
+        <div id="modal-upload-success" class="absolute inset-0 z-[100] hidden flex items-center justify-center bg-black/50 backdrop-blur-sm fade-in">
+             <div class="bg-white w-[80%] rounded-[2rem] p-6 text-center shadow-2xl relative">
+                
+                <!-- Updated Animation Structure -->
+                <div class="relative mb-10 w-40 h-40 flex items-center justify-center mx-auto">
+                    <!-- Decorative Circles/Vectors based on user design -->
+                    <div class="absolute inset-0 bg-design-pink/30 rounded-full animate-pulse-soft"></div>
+                    <div class="absolute w-32 h-32 bg-design-pink/50 rounded-full flex items-center justify-center">
+                        <div class="absolute -top-2 -right-2 w-6 h-6 bg-design-red rounded-full opacity-80 animate-float"></div>
+                        <div class="absolute bottom-4 -left-2 w-4 h-4 bg-design-dark-grey rounded-full opacity-60"></div>
+                        
+                        <div class="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-lg relative z-10">
+                            <i data-lucide="check" class="w-12 h-12 text-design-red" stroke-width="4"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <h2 class="text-xl font-bold text-recampus-red mb-2">Berhasil Diupload!</h2>
+                <p id="upload-success-msg" class="text-sm text-gray-500 mb-6">Barangmu sudah tayang dan bisa dilihat oleh mahasiswa lain.</p>
+                <button onclick="closeUploadSuccess()" class="w-full bg-recampus-red text-white font-bold py-3.5 rounded-xl shadow-lg hover:bg-maroon-cs transition active:scale-95">Lihat di Pengaturan Produk</button>
+             </div>
+        </div>
+
+        <!-- Income Stats View -->
+        <div id="view-income-stats" class="absolute inset-0 z-[80] bg-gray-50 flex flex-col hidden slide-up">
+            <div class="bg-seller-primary pt-14 pb-6 px-6 rounded-b-[30px] shadow-lg">
+                <div class="flex justify-between items-center mb-4">
+                    <button onclick="closeIncomeStats()" class="bg-white/20 p-2 rounded-full hover:bg-white/30 transition text-white">
+                        <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                    </button>
+                    <h2 class="text-white font-bold text-lg">Monthly Income</h2>
+                    <div class="w-9"></div> 
+                </div>
+                <div class="text-center text-white">
+                    <p class="text-xs opacity-85 mb-1">Total Pendapatan (Desember)</p>
+                    <h1 class="text-3xl font-bold">Rp 1.173.200</h1>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto no-scrollbar p-5 pb-24">
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-5">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-sm font-bold text-gray-700">Grafik Mingguan</h3>
+                        <select class="text-[10px] bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 outline-none">
+                            <option>Desember 2025</option>
+                            <option>November 2025</option>
+                        </select>
+                    </div>
+                    <div class="h-48 w-full relative">
+                        <canvas id="incomeChart"></canvas>
+                    </div>
+                </div>
+
+                <h3 class="text-sm font-bold text-gray-700 mb-3">Rincian Pemasukan</h3>
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 divide-y divide-gray-50">
+                    <div class="p-4 flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-green-50 p-2 rounded-lg text-green-600"><i data-lucide="arrow-down-left" class="w-5 h-5"></i></div>
+                            <div>
+                                <p class="text-xs font-bold text-gray-800">Penjualan #INV-201</p>
+                                <p class="text-[10px] text-gray-400">04 Des • Sepatu Nike</p>
+                            </div>
+                        </div>
+                        <p class="text-sm font-bold text-green-600">+ Rp 550.000</p>
+                    </div>
+                    <div class="p-4 flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-green-50 p-2 rounded-lg text-green-600"><i data-lucide="arrow-down-left" class="w-5 h-5"></i></div>
+                            <div>
+                                <p class="text-xs font-bold text-gray-800">Penjualan #INV-198</p>
+                                <p class="text-[10px] text-gray-400">02 Des • Jaket Denim</p>
+                            </div>
+                        </div>
+                        <p class="text-sm font-bold text-green-600">+ Rp 120.000</p>
+                    </div>
+                    <div class="p-4 flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-green-50 p-2 rounded-lg text-green-600"><i data-lucide="arrow-down-left" class="w-5 h-5"></i></div>
+                            <div>
+                                <p class="text-xs font-bold text-gray-800">Penjualan #INV-180</p>
+                                <p class="text-[10px] text-gray-400">01 Des • Buku Kalkulus</p>
+                            </div>
+                        </div>
+                        <p class="text-sm font-bold text-green-600">+ Rp 150.000</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Detail View -->
+        <div id="view-product-detail" class="absolute inset-0 z-[65] bg-white flex flex-col hidden transition-transform duration-300">
+            <div class="pt-14 pb-3 px-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10">
+                <button onclick="closeProductDetail()" class="p-2 hover:bg-gray-50 rounded-full"><i data-lucide="arrow-left" class="w-6 h-6 text-gray-700"></i></button>
+                <h1 class="text-lg font-bold text-red-800">Detail Produk</h1>
+                <div class="flex gap-3"><button><i data-lucide="share-2" class="w-5 h-5 text-gray-600"></i></button><button><i data-lucide="shopping-cart" class="w-5 h-5 text-gray-600"></i></button></div>
+            </div>
+            <div class="flex-1 overflow-y-auto no-scrollbar pb-24">
+                <div class="w-full h-72 bg-gray-200 relative"><img src="https://images.unsplash.com/photo-1594620302200-9a762244a156?auto=format&fit=crop&q=80&w=600&h=600" class="w-full h-full object-cover"></div>
+                <div class="px-5 py-4">
+                    <div class="mb-4"><h2 class="text-2xl font-bold text-recampus-dark">Rp 45.000</h2><p class="text-gray-800 font-medium text-base mt-1">Rak buku minimalis merk Pavilion</p><div class="flex justify-between items-center mt-2 text-xs text-gray-500"><div class="flex items-center gap-1"><i data-lucide="map-pin" class="w-3 h-3"></i> Surabaya</div><span>0 Terjual</span></div></div>
+                    <hr class="border-gray-100 my-4">
+                    <div class="flex items-center justify-between bg-white border border-gray-200 p-3 rounded-xl shadow-sm"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center font-bold text-gray-600 text-sm">HD</div><div><div class="flex items-center gap-2"><h3 class="font-bold text-sm text-gray-800">James Darjo</h3><span class="w-2 h-2 bg-green-500 rounded-full"></span><span class="text-[10px] text-green-600">Online</span></div><p class="text-[10px] text-gray-500">Asal: Universitas Surabaya</p></div></div><button class="px-3 py-1.5 border border-gray-300 rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-50">Kunjungi</button></div>
+                    <hr class="border-gray-100 my-4">
+                    <div><h3 class="font-bold text-gray-800 mb-2">Deskripsi Produk</h3><p class="text-sm text-gray-600 leading-relaxed space-y-1">Rak buku bekas pemakaian pribadi teknik kimia.<br>- Kondisi: 80% mulus<br>- Bahan: Kayu jati belanda<br>- Alasan dijual: Udah lulus, mau pindahan<br>- Lokasi: Daerah Tenggilis, dekat kampus UBAYA</p></div>
+                    <div class="mt-4 bg-yellow-50 p-3 rounded-lg border border-yellow-100"><p class="text-xs text-yellow-800">Bisa COD sekitar Surabaya atau pakai kurir. Nego tipis aja.</p></div>
+                    <hr class="border-gray-100 my-4">
+                    <div class="flex justify-between items-start"><div><h3 class="font-bold text-gray-800 text-sm">Ongkos Kirim</h3><p class="text-xs text-gray-500">Pengiriman dr Surabaya</p></div><div class="text-right"><p class="text-sm font-bold text-gray-800">Rp 7.000 - Rp 15.000</p></div></div>
+                </div>
+            </div>
+            <div class="absolute bottom-0 w-full bg-white border-t border-gray-200 px-5 py-3 pb-8 z-20 flex gap-3 items-center">
+                <button class="p-3 border border-recampus-red rounded-xl text-recampus-red hover:bg-orange-50"><i data-lucide="message-circle" class="w-6 h-6"></i></button>
+                <button class="flex-1 py-3 border border-recampus-red rounded-xl text-recampus-red font-bold text-sm hover:bg-orange-50">Keranjang</button>
+                <button class="flex-1 py-3 bg-recampus-red rounded-xl text-white font-bold text-sm shadow-md hover:bg-recampus-dark">Beli Sekarang</button>
+            </div>
+        </div>
+
+        <!-- Edit Profile View -->
+        <div id="view-edit-profile" class="absolute inset-0 z-[70] bg-white flex flex-col hidden transition-transform duration-300">
+            <div class="pt-14 pb-3 px-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10">
+                <button onclick="closeEditProfile()" class="p-2 hover:bg-gray-50 rounded-full"><i data-lucide="arrow-left" class="w-6 h-6 text-gray-700"></i></button>
+                <h1 class="text-lg font-bold text-gray-800">Edit Profil</h1>
+                <div class="w-10"></div> 
+            </div>
+            <div class="flex-1 overflow-y-auto no-scrollbar pb-24 px-6 pt-6">
+                <div class="flex flex-col items-center mb-8"><h2 class="text-gray-500 text-sm mb-4">Data Diri</h2><div class="relative"><div class="w-24 h-24 rounded-full border-4 border-recampus-light overflow-hidden bg-gray-200"><img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=200&h=200" class="w-full h-full object-cover"></div><button class="absolute bottom-0 right-0 bg-recampus-red p-1.5 rounded-full border-2 border-white shadow-sm"><i data-lucide="camera" class="w-3 h-3 text-white"></i></button></div><p class="text-xs text-gray-400 mt-2">@fidellia_aurora</p></div>
+                <form class="space-y-6">
+                    <div><label class="block text-xs font-semibold text-gray-500 mb-1">Nama Lengkap</label><input type="text" value="Fidellia Aurora" class="w-full text-sm font-medium text-gray-800 border-b border-gray-300 py-2 focus:outline-none focus:border-recampus-red bg-transparent"></div>
+                    <div><label class="block text-xs font-semibold text-gray-500 mb-1">Username</label><input type="text" value="fidellia_aurora" class="w-full text-sm font-medium text-gray-800 border-b border-gray-300 py-2 focus:outline-none focus:border-recampus-red bg-transparent"></div>
+                    <div><label class="block text-xs font-semibold text-gray-500 mb-1">No. Handphone</label><input type="tel" value="081234567890" class="w-full text-sm font-medium text-gray-800 border-b border-gray-300 py-2 focus:outline-none focus:border-recampus-red bg-transparent"></div>
+                    <div><label class="block text-xs font-semibold text-gray-500 mb-1">Email</label><input type="email" value="fidellia@student.its.ac.id" class="w-full text-sm font-medium text-gray-800 border-b border-gray-300 py-2 focus:outline-none focus:border-recampus-red bg-transparent"></div>
+                    <div><label class="block text-xs font-semibold text-gray-500 mb-1">Alamat Pengiriman</label><input type="text" value="Jl. Teknik Kimia No. 42, Sukolilo" class="w-full text-sm font-medium text-gray-800 border-b border-gray-300 py-2 focus:outline-none focus:border-recampus-red bg-transparent"></div>
+                    <div><label class="block text-xs font-semibold text-gray-500 mb-2">Jenis Kelamin</label><div class="flex gap-4"><label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="gender" class="accent-recampus-red" ><span class="text-sm text-gray-600">Laki-laki</span></label><label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="gender" class="accent-recampus-red" checked><span class="text-sm text-gray-600">Perempuan</span></label></div></div>
+                    <div><label class="block text-xs font-semibold text-gray-500 mb-1">Tanggal Lahir</label><input type="date" value="2003-05-15" class="w-full text-sm font-medium text-gray-800 border-b border-gray-300 py-2 focus:outline-none focus:border-recampus-red bg-transparent"></div>
+                    <div><label class="block text-xs font-semibold text-gray-500 mb-1">Asal Instansi / Nama Kampus</label><input type="text" value="Institut Teknologi Sepuluh Nopember" class="w-full text-sm font-medium text-gray-800 border-b border-gray-300 py-2 focus:outline-none focus:border-recampus-red bg-transparent"></div>
+                </form>
+            </div>
+            <div class="absolute bottom-0 w-full bg-white border-t border-gray-200 px-6 py-4 pb-8 z-20">
+                <button onclick="closeEditProfile()" class="w-full bg-recampus-red text-white font-bold py-3.5 rounded-xl shadow-lg hover:bg-recampus-dark transition active:scale-95">Simpan Perubahan</button>
+            </div>
+        </div>
+
+        <div id="header-container" class="hidden bg-white pt-14 pb-4 px-6 shadow-sm relative z-10 transition-all duration-300 text-center">
+             <h1 id="header-title" class="text-recampus-red text-xl font-bold">Profil Saya</h1>
+        </div>
+
+        <div id="main-content" class="flex-1 overflow-y-auto no-scrollbar bg-gray-50 pb-24 scroll-smooth relative hidden">
+            
+            <div id="page-home" class="px-5 fade-in">
+                <div class="bg-gradient-to-b from-recampus-red to-recampus-dark pt-16 pb-6 px-6 rounded-b-[2rem] shadow-lg -mx-5 -mt-6 mb-6">
+                    <div class="flex justify-between items-start mt-8"> <div><p class="text-recampus-light text-sm opacity-90">Selamat Pagi,</p><h1 class="text-white text-2xl font-serif font-bold tracking-wide">Fidellia Aurora</h1><div class="flex items-center gap-1 mt-1 bg-white/20 w-fit px-2 py-0.5 rounded-full backdrop-blur-sm"><i data-lucide="map-pin" class="w-3 h-3 text-white"></i><span class="text-[10px] text-white">Kota Surabaya</span></div></div><div class="relative"><div class="bg-white/20 p-2 rounded-full backdrop-blur-sm"><i data-lucide="bell" class="w-5 h-5 text-white"></i></div><span class="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-recampus-red"></span></div></div>
+                </div>
+                <div class="relative group mb-6 z-30">
+                    <input id="search-input" type="text" placeholder="Cari: Rak Buku, Meja, Kipas..." onkeyup="handleSearch(this.value)" class="w-full bg-white py-3.5 pl-12 pr-12 rounded-xl shadow-sm border border-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-recampus-red transition-all">
+                    <i data-lucide="search" class="w-5 h-5 text-gray-400 absolute left-4 top-3.5 group-focus-within:text-recampus-red transition-colors"></i>
+                    <button onclick="toggleFilter()" class="absolute right-3 top-2.5 bg-recampus-light p-1.5 rounded-lg border border-recampus-red/20 hover:bg-recampus-red hover:text-white transition-colors cursor-pointer"><i data-lucide="sliders-horizontal" class="w-4 h-4"></i></button>
+                </div>
+                <div id="home-default-view">
+                    <div class="flex gap-3 overflow-x-auto no-scrollbar pb-1 mb-6">
+                        <button class="px-4 py-1.5 bg-recampus-red text-white text-xs font-medium rounded-full shadow-md whitespace-nowrap">Semua</button>
+                        <button class="px-4 py-1.5 bg-white border border-gray-200 text-gray-600 text-xs font-medium rounded-full whitespace-nowrap">Rak Buku</button>
+                        <button class="px-4 py-1.5 bg-white border border-gray-200 text-gray-600 text-xs font-medium rounded-full whitespace-nowrap">Elektronik</button>
+                        <button class="px-4 py-1.5 bg-white border border-gray-200 text-gray-600 text-xs font-medium rounded-full whitespace-nowrap">Fashion</button>
+                    </div>
+                    
+                    <!-- >>> SPECIAL PROMO SECTION (Integrated) <<< -->
+                    <div class="mt-2 mb-6 animate-fade-in-up"> <div class="flex justify-between items-end mb-3">
+                        <h2 class="font-bold text-gray-800 text-lg">Special Promo</h2>
+                        <span class="text-xs text-recampus-red font-semibold cursor-pointer">Lihat Semua</span>
+                    </div>
+                    
+                    <div class="bg-white rounded-3xl p-4 shadow-sm border border-gray-100 group cursor-pointer flex items-center justify-between overflow-hidden hover:shadow-md transition-shadow">
+                        
+                        <div class="flex-1 pr-2"> 
+                            <span class="bg-red-50 text-recampus-red text-[10px] font-bold px-2 py-0.5 rounded mb-2 inline-block">HOT ITEM</span>
+                            <h3 class="text-lg font-bold text-gray-800 leading-tight">iPad Pro 2021</h3>
+                            <p class="text-[10px] text-gray-500 mt-1 mb-3">Space Gray, 128GB. Mulus no dent.</p>
+                            <div class="flex items-center gap-2">
+                                <span class="text-recampus-red font-bold text-sm">Rp 12.000.000</span>
+                                <span class="text-[10px] text-gray-300 line-through">14jt</span>
+                            </div>
+                        </div>
+
+                        <div class="w-28 h-28 flex-shrink-0 bg-gray-50 rounded-2xl overflow-hidden">
+                            <img src="https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" 
+                                class="w-full h-full object-cover mix-blend-multiply group-hover:scale-110 transition duration-500">
+                        </div>
+
+                    </div>
+                </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-text-dark mb-3 flex items-center gap-2">Baru di Sekitarmu <span class="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Surabaya</span></h2>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div onclick="openProductDetail()" class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 group cursor-pointer hover:shadow-md transition-all">
+                                <div class="relative h-36 overflow-hidden"><img src="https://images.unsplash.com/photo-1594620302200-9a762244a156?auto=format&fit=crop&q=80&w=300&h=300" alt="Rak Buku" class="w-full h-full object-cover"><span class="absolute bottom-2 left-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded backdrop-blur-sm">Bekas - 90%</span></div>
+                                <div class="p-3"><h3 class="text-sm font-semibold text-gray-800 line-clamp-1">Rak Buku Minimalis</h3><p class="text-[10px] text-gray-500 mb-2">Daerah Tenggilis • 1km</p><div class="flex justify-between items-center"><span class="text-sm font-bold text-recampus-dark">Rp 45.000</span><button class="text-recampus-red hover:bg-recampus-light p-1 rounded-full"><i data-lucide="heart" class="w-4 h-4"></i></button></div></div>
+                            </div>
+                            <div onclick="openProductDetail()" class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 group cursor-pointer hover:shadow-md transition-all">
+                                <div class="relative h-36 overflow-hidden"><img src="https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?auto=format&fit=crop&q=80&w=300&h=300" alt="Meja Belajar" class="w-full h-full object-cover"><span class="absolute bottom-2 left-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded backdrop-blur-sm">Bekas - 80%</span></div>
+                                <div class="p-3"><h3 class="text-sm font-semibold text-gray-800 line-clamp-1">Meja Belajar Lipat</h3><p class="text-[10px] text-gray-500 mb-2">Gebang • 0.5km</p><div class="flex justify-between items-center"><span class="text-sm font-bold text-recampus-dark">Rp 30.000</span><button class="text-recampus-red hover:bg-recampus-light p-1 rounded-full"><i data-lucide="heart" class="w-4 h-4"></i></button></div></div>
+                            </div>
+                             <div onclick="openProductDetail()" class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 group cursor-pointer hover:shadow-md transition-all">
+                                <div class="relative h-36 overflow-hidden"><img src="https://raw.githubusercontent.com/abelliaayu28/FINALPROJECTIBS/refs/heads/main/rice%20cooker.jpeg" alt="Rice Cooker" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"></div>
+                                <div class="p-3"><h3 class="text-sm font-semibold text-gray-800 line-clamp-1">Rice Cooker</h3><p class="text-[10px] text-gray-500 mb-2">Keputih • 2km</p><div class="flex justify-between items-center"><span class="text-sm font-bold text-recampus-dark">Rp 50.000</span><button class="text-recampus-red hover:bg-recampus-light p-1 rounded-full"><i data-lucide="heart" class="w-4 h-4"></i></button></div></div>
+                            </div>
+                            <div onclick="openProductDetail()" class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 group cursor-pointer hover:shadow-md transition-all">
+                                <div class="relative h-36 overflow-hidden"><img src="https://raw.githubusercontent.com/abelliaayu28/FINALPROJECTIBS/refs/heads/main/kemeja%20wispie.jpeg"></div>
+                                <div class="p-3"><h3 class="text-sm font-semibold text-gray-800 line-clamp-1">Kemeja Wispie M</h3><p class="text-[10px] text-gray-500 mb-2">Sukolilo • 1.2km</p><div class="flex justify-between items-center"><span class="text-sm font-bold text-recampus-dark">Rp 60.000</span><button class="text-recampus-red hover:bg-recampus-light p-1 rounded-full"><i data-lucide="heart" class="w-4 h-4"></i></button></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="search-result-view" class="hidden">
+                    <div class="flex gap-2 overflow-x-auto no-scrollbar mb-4">
+                        <button class="px-3 py-1 bg-white border border-gray-200 text-gray-600 rounded-full text-xs hover:bg-recampus-red hover:text-white transition">Terkait</button>
+                        <button class="px-3 py-1 bg-white border border-gray-200 text-gray-600 rounded-full text-xs hover:bg-recampus-red hover:text-white transition">Terbaru</button>
+                        <button class="px-3 py-1 bg-white border border-gray-200 text-gray-600 rounded-full text-xs hover:bg-recampus-red hover:text-white transition">Termurah</button>
+                        <button class="px-3 py-1 bg-white border border-gray-200 text-gray-600 rounded-full text-xs hover:bg-recampus-red hover:text-white transition">Lokasi Kampus</button>
+                    </div>
+                    <h2 class="text-sm text-gray-500 mb-3">Hasil Pencarian</h2>
+                    <div id="search-grid" class="grid grid-cols-2 gap-4">
+                         </div>
+                </div>
+            </div>
+
+            <div id="page-category" class="px-5 pt-4 hidden fade-in h-full relative">
+                <div class="pt-2 pb-4">
+                </div>
+                
+                <div class="grid grid-cols-3 gap-4 mb-8">
+                    <button onclick="openCategory('buku', 'Buku')" class="flex flex-col items-center gap-2 p-3 bg-white rounded-xl shadow-sm border border-gray-100 hover:scale-95 transition-transform">
+                        <div class="p-3 bg-blue-50 text-blue-600 rounded-2xl shadow-sm"><i data-lucide="book-open" class="w-6 h-6"></i></div>
+                        <span class="text-xs font-medium text-gray-700">Buku</span>
+                    </button>
+                    
+                    <button onclick="openCategory('elektronik', 'Elektronik')" class="flex flex-col items-center gap-2 p-3 bg-white rounded-xl shadow-sm border border-gray-100 hover:scale-95 transition-transform">
+                        <div class="p-3 bg-purple-50 text-purple-600 rounded-2xl shadow-sm"><i data-lucide="laptop" class="w-6 h-6"></i></div>
+                        <span class="text-xs font-medium text-gray-700">Elektronik</span>
+                    </button>
+                    
+                    <button onclick="openCategory('perabot', 'Perabot Kost')" class="flex flex-col items-center gap-2 p-3 bg-white rounded-xl shadow-sm border border-gray-100 hover:scale-95 transition-transform">
+                        <div class="p-3 bg-orange-50 text-orange-600 rounded-2xl shadow-sm"><i data-lucide="armchair" class="w-6 h-6"></i></div>
+                        <span class="text-xs font-medium text-gray-700">Perabot Kost</span>
+                    </button>
+                    
+                    <button onclick="openCategory('fashion', 'Fashion')" class="flex flex-col items-center gap-2 p-3 bg-white rounded-xl shadow-sm border border-gray-100 hover:scale-95 transition-transform">
+                        <div class="p-3 bg-pink-50 text-pink-600 rounded-2xl shadow-sm"><i data-lucide="shirt" class="w-6 h-6"></i></div>
+                        <span class="text-xs font-medium text-gray-700">Fashion</span>
+                    </button>
+                    
+                    <button onclick="openCategory('alattulis', 'Alat Tulis')" class="flex flex-col items-center gap-2 p-3 bg-white rounded-xl shadow-sm border border-gray-100 hover:scale-95 transition-transform">
+                        <div class="p-3 bg-yellow-50 text-yellow-600 rounded-2xl shadow-sm"><i data-lucide="pencil-ruler" class="w-6 h-6"></i></div>
+                        <span class="text-xs font-medium text-gray-700">Alat Tulis</span>
+                    </button>
+                    
+                    <button onclick="openCategory('care', 'Skincare & MakeUp')" class="flex flex-col items-center gap-2 p-3 bg-white rounded-xl shadow-sm border border-gray-100 hover:scale-95 transition-transform">
+                        <div class="p-3 bg-gray-50 text-gray-600 rounded-2xl shadow-sm"><i data-lucide="brush" class="w-6 h-6"></i></div>
+                        <span class="text-xs font-medium text-gray-700">Skincare & MakeUp</span>
+                    </button>
+                </div>
+
+                <h3 class="text-sm font-bold text-gray-800 mb-3">Paling Banyak Dicari</h3>
+                <div class="flex flex-wrap gap-2 mb-6">
+                    <span class="px-3 py-1.5 bg-gray-100 rounded-full text-xs text-gray-600 font-medium">Kalkulus Purcell</span>
+                    <span class="px-3 py-1.5 bg-gray-100 rounded-full text-xs text-gray-600 font-medium">Meja Belajar Lipat</span>
+                    <span class="px-3 py-1.5 bg-gray-100 rounded-full text-xs text-gray-600 font-medium">Kipas Angin</span>
+                    <span class="px-3 py-1.5 bg-gray-100 rounded-full text-xs text-gray-600 font-medium">Jas Lab</span>
+                </div>
+                <div>
+                    <div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-category-result" class="absolute inset-0 z-40 bg-gray-50 flex flex-col hidden slide-up min-h-full">
+                <div class="bg-white px-2 py-2 flex items-center gap-3 shadow-sm sticky top-0 z-10 pt-0">
+                    <button onclick="closeCategoryResult()" class="p-2 hover:bg-gray-100 rounded-full">
+                        <i data-lucide="chevron-left" class="w-6 h-6 text-gray-700"></i>
+                    </button>
+                    <h1 id="category-result-title" class="text-lg font-bold text-gray-800 flex-1">Nama Kategori</h1>
+                    <button class="p-2 hover:bg-gray-100 rounded-full text-gray-600">
+                        <i data-lucide="search" class="w-5 h-5"></i>
+                    </button>
+                    <button class="p-2 hover:bg-gray-100 rounded-full text-gray-600">
+                        <i data-lucide="filter" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <div class="flex-1 overflow-y-auto no-scrollbar pb-24 p-4">
+                    <p id="category-result-count" class="text-xs text-gray-500 mb-3">Menampilkan barang...</p>
+                    
+                    <div id="category-result-grid" class="grid grid-cols-2 gap-4">
+                        </div>
+
+                    <div id="category-promo-banner" class="my-4 shadow-md hidden">
+                    </div>
+
+                    <div id="category-empty-state" class="hidden flex flex-col items-center justify-center py-10 text-gray-400">
+                        <i data-lucide="layout-grid" class="w-16 h-16 text-gray-200 mb-4"></i>
+                        <p class="text-sm">Belum ada barang di kategori ini.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="page-cart" class="px-5 pt-4 hidden fade-in h-full flex flex-col relative">
+                <div class="flex-1">
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex gap-3 items-center">
+                        <input type="checkbox" checked class="w-5 h-5 accent-recampus-red rounded">
+                        <div class="w-20 h-20 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                            <img src="https://images.unsplash.com/photo-1594620302200-9a762244a156?auto=format&fit=crop&q=80&w=300&h=300" class="w-full h-full object-cover">
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="font-bold text-sm text-gray-800 line-clamp-1">Rak Buku Minimalis</h3>
+                            <p class="text-xs text-gray-500 mb-2">Kayu Jati Belanda</p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm font-bold text-recampus-dark">Rp 45.000</span>
+                                <div class="flex items-center border border-gray-200 rounded-lg">
+                                    <button class="px-2 py-1 text-gray-500">-</button>
+                                    <span class="px-2 text-sm font-medium">1</span>
+                                    <button class="px-2 py-1 text-gray-500">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white border-t border-gray-100 p-5 pb-8 -mx-5 rounded-t-[2rem] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-gray-500 text-sm">Total (1 Barang)</span>
+                        <span class="text-lg font-bold text-recampus-dark">Rp 45.000</span>
+                    </div>
+                    <button onclick="openCheckout()" class="w-full bg-recampus-red text-white font-bold py-3.5 rounded-xl shadow-lg hover:bg-recampus-dark transition active:scale-95">Checkout</button>
+                </div>
+            </div>
+
+            <div id="page-profile" class="px-5 pt-12 space-y-6 hidden fade-in">
+                
+                <div class="bg-white rounded-2xl p-5 shadow-lg border border-gray-100 flex flex-col items-center relative z-20">
+                    <div class="w-[116px] h-[116px] rounded-full border-4 border-white shadow-md -mt-12 overflow-hidden bg-gray-200">
+                        <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=200&h=200" class="w-full h-full object-cover">
+                    </div>
+                    <h2 class="mt-3 text-lg font-bold text-gray-900">Fidellia Aurora</h2>
+                    <p class="text-xs text-gray-500">Institut Teknologi Sepuluh Nopember</p>
+                    <div class="mt-2 flex items-center gap-1 bg-blue-50 text-blue-600 px-3 py-1 rounded-full border border-blue-100">
+                        <i data-lucide="badge-check" class="w-3 h-3"></i>
+                        <span class="text-[10px] font-bold">Terverifikasi</span>
+                    </div>
+                </div>
+
+                <div onclick="openBuyerPremium()" class="bg-gradient-to-r from-recampus-yellow to-yellow-600 rounded-xl p-4 flex justify-between items-center shadow-md cursor-pointer hover:opacity-95 transition">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-white/20 p-2 rounded-lg">
+                            <i data-lucide="crown" class="w-6 h-6 text-white"></i>
+                        </div>
+                        <div class="text-white">
+                            <h3 class="font-bold text-sm">ReCampus Premium</h3>
+                            <p class="text-[12px] opacity-90">Belanja makin mudah dengan fitur ekslusif</p>
+                        </div>
+                    </div>
+                    <button class="bg-white text-red-500 px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm">Info</button>
+                </div>
+
+                <div>
+                    <h3 class="text-sm font-bold text-gray-800 mb-3 ml-1">Pesanan Saya</h3>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 grid grid-cols-4 gap-2 text-center">
+                        <div class="flex flex-col items-center gap-1 cursor-pointer hover:opacity-70"><i data-lucide="package" class="w-6 h-6 text-recampus-red"></i><span class="text-[10px] text-gray-600">Dikemas</span></div>
+                        <div class="flex flex-col items-center gap-1 cursor-pointer hover:opacity-70"><i data-lucide="truck" class="w-6 h-6 text-recampus-red"></i><span class="text-[10px] text-gray-600">Dikirim</span></div>
+                        <div class="flex flex-col items-center gap-1 cursor-pointer hover:opacity-70"><i data-lucide="star" class="w-6 h-6 text-recampus-red"></i><span class="text-[10px] text-gray-600">Untuk Diulas</span></div>
+                        <div class="flex flex-col items-center gap-1 cursor-pointer hover:opacity-70"><i data-lucide="rotate-ccw" class="w-6 h-6 text-recampus-red"></i><span class="text-[10px] text-gray-600">Retur</span></div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex items-center gap-3">
+                        <div class="bg-green-100 p-2 rounded-full"><i data-lucide="wallet" class="w-5 h-5 text-green-600"></i></div>
+                        <div><p class="text-[10px] text-gray-500">Saldo</p><p class="text-sm font-bold">Rp 120.000</p></div>
+                    </div>
+                    <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex items-center gap-3">
+                        <div class="bg-orange-100 p-2 rounded-full"><i data-lucide="ticket" class="w-5 h-5 text-orange-600"></i></div>
+                        <div><p class="text-[10px] text-gray-500">Voucher</p><p class="text-sm font-bold">2 Tersedia</p></div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-sm font-bold text-gray-800">Monthly Transaction</h3>
+                        <div class="bg-gray-100 px-2 py-1 rounded text-[10px] text-gray-500">2025</div>
+                    </div>
+                    <div class="h-40 w-full relative"><canvas id="transactionChart"></canvas></div>
+                    <div class="mt-3 flex justify-between items-end border-t border-gray-100 pt-2">
+                        <div><p class="text-[10px] text-gray-400">Total Item Dibeli</p><p class="text-lg font-bold text-recampus-dark">5 <span class="text-xs font-normal text-gray-500">item</span></p></div>
+                        <button class="text-xs text-recampus-red underline">Lihat Detail</button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <button onclick="openOrderHistory()" class="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 border-b border-gray-50">
+                        <div class="flex items-center gap-3"><i data-lucide="shopping-bag" class="w-5 h-5 text-gray-500"></i><span class="text-sm text-gray-700">Order History</span></div>
+                        <i data-lucide="chevron-right" class="w-4 h-4 text-gray-400"></i>
+                    </button>
+                    <button onclick="openEditProfile()" class="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 border-b border-gray-50">
+                        <div class="flex items-center gap-3"><i data-lucide="user-cog" class="w-5 h-5 text-gray-500"></i><span class="text-sm text-gray-700">Edit Profil</span></div>
+                        <i data-lucide="chevron-right" class="w-4 h-4 text-gray-400"></i>
+                    </button>
+                    <button class="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 border-b border-gray-50">
+                        <div class="flex items-center gap-3"><i data-lucide="settings" class="w-5 h-5 text-gray-500"></i><span class="text-sm text-gray-700">Pengaturan</span></div>
+                        <i data-lucide="chevron-right" class="w-4 h-4 text-gray-400"></i>
+                    </button>
+                    
+                    <button onclick="switchToSellerMode()" class="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 border-b border-gray-50">
+                        <div class="flex items-center gap-3"><i data-lucide="store" class="w-5 h-5 text-gray-500"></i><span class="text-sm text-gray-700">Beralih Sebagai Penjual</span></div>
+                    </button>
+
+                    <button onclick="logout()" class="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50">
+                        <div class="flex items-center gap-3"><i data-lucide="log-out" class="w-5 h-5 text-red-500"></i><span class="text-sm text-red-500">Keluar</span></div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Checkout View -->
+        <div id="view-checkout" class="absolute inset-0 z-[80] bg-gray-50 flex flex-col hidden slide-up">
+            <div class="pt-14 pb-3 px-4 border-b border-gray-200 bg-white sticky top-0 z-10 flex items-center justify-between">
+                <button onclick="closeCheckout()" class="p-2 hover:bg-gray-50 rounded-full"><i data-lucide="arrow-left" class="w-6 h-6 text-gray-700"></i></button>
+                <h1 class="text-lg font-bold text-gray-800">Checkout</h1>
+                <div class="w-10"></div> </div>
+
+            <div class="flex-1 overflow-y-auto no-scrollbar pb-32 p-4 space-y-4">
+                
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wide flex items-center gap-1">
+                            <i data-lucide="map-pin" class="w-3 h-3"></i> Lokasi Penerima
+                        </h3>
+                        <button class="text-xs font-bold text-recampus-red">Ubah</button>
+                    </div>
+                    <div class="flex gap-3 items-start">
+                        <div class="mt-1">
+                            <div class="bg-orange-100 p-1.5 rounded-full"><i data-lucide="user" class="w-4 h-4 text-recampus-red"></i></div>
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold text-gray-800">Fidellia Aurora <span class="font-normal text-gray-500 text-xs">| (+62) 812-3456-7890</span></p>
+                            <p class="text-xs text-gray-600 mt-1 leading-relaxed">Gedung Perpustakaan Pusat (Lobby Depan), Kampus ITS Sukolilo, Surabaya.</p>
+                            <span class="inline-block mt-2 px-2 py-0.5 bg-gray-100 text-gray-500 text-[10px] rounded border border-gray-200">Utama</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3 flex items-center gap-1">
+                        <i data-lucide="shopping-bag" class="w-3 h-3"></i> Barang yang dibeli
+                    </h3>
+                    <div class="flex gap-3 mb-3 pb-3 border-b border-dashed border-gray-200">
+                        <div class="w-16 h-16 bg-gray-200 rounded-lg bg-cover bg-center flex-shrink-0" style="background-image: url('https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80')"></div>
+                        <div class="flex-1">
+                            <h4 class="text-sm font-bold text-gray-800 line-clamp-1">Kalkulus Purcell Edisi 9 (Bekas)</h4>
+                            <p class="text-[10px] text-gray-500 mt-0.5">Kondisi: Mulus 90%</p>
+                            <div class="flex justify-between items-end mt-1">
+                                <p class="text-sm font-bold text-recampus-red">Rp 150.000</p>
+                                <p class="text-xs text-gray-400">x1</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="message-square" class="w-4 h-4 text-gray-400"></i>
+                        <input type="text" placeholder="Pesan untuk penjual (opsional)..." class="flex-1 text-xs bg-gray-50 border-none rounded-lg py-2 px-3 focus:ring-1 focus:ring-recampus-red outline-none">
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3 flex items-center gap-1">
+                        <i data-lucide="truck" class="w-3 h-3"></i> Metode Pengiriman
+                    </h3>
+                    
+                    <div class="space-y-2 mb-3">
+                        <label class="flex items-center justify-between p-3 border rounded-xl cursor-pointer hover:bg-orange-50 transition radio-selected" onclick="selectDelivery(this)">
+                            <div class="flex items-center gap-3">
+                                <div class="w-4 h-4 rounded-full border border-gray-300 flex items-center justify-center radio-circle transition-colors bg-recampus-red border-transparent">
+                                    <div class="w-1.5 h-1.5 bg-white rounded-full"></div>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-bold text-gray-800">COD / Ketemuan</p>
+                                    <p class="text-[10px] text-gray-500">Bayar saat bertemu penjual</p>
+                                </div>
+                            </div>
+                            <span class="text-xs font-bold text-green-600">Gratis</span>
+                        </label>
+
+                        <label class="flex items-center justify-between p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-orange-50 transition" onclick="selectDelivery(this)">
+                            <div class="flex items-center gap-3">
+                                <div class="w-4 h-4 rounded-full border border-gray-300 flex items-center justify-center radio-circle transition-colors">
+                                    <div class="w-1.5 h-1.5 bg-white rounded-full hidden"></div>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-bold text-gray-800">ReCampus Express</p>
+                                    <p class="text-[10px] text-gray-500">Diantar kurir mahasiswa (Sameday)</p>
+                                </div>
+                            </div>
+                            <span class="text-xs font-bold text-gray-800">Rp 5.000</span>
+                        </label>
+                    </div>
+
+                    <div class="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                        <p class="text-[10px] font-bold text-blue-600 mb-2">Mau ketemu kapan?</p>
+                        <div class="flex gap-2">
+                            <select class="text-xs border border-blue-200 rounded px-2 py-1.5 bg-white text-gray-700 outline-none flex-1">
+                                <option>Hari Ini</option>
+                                <option>Besok</option>
+                            </select>
+                            <select class="text-xs border border-blue-200 rounded px-2 py-1.5 bg-white text-gray-700 outline-none flex-1">
+                                <option>12:00 - 13:00 (Istirahat)</option>
+                                <option>16:00 - 17:00 (Pulang)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="w-full bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center hover:bg-gray-50">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="ticket" class="w-4 h-4 text-orange-500"></i>
+                        <span class="text-sm font-medium text-gray-700">Voucher ReCampus</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-gray-400">Gunakan / masukkan kode</span>
+                        <i data-lucide="chevron-right" class="w-4 h-4 text-gray-300"></i>
+                    </div>
+                </button>
+
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3 flex items-center gap-1">
+                        <i data-lucide="wallet" class="w-3 h-3"></i> Metode Pembayaran
+                    </h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button class="border border-recampus-red bg-orange-50 p-3 rounded-xl flex flex-col items-center justify-center gap-1 relative">
+                            <div class="absolute top-2 right-2 w-3 h-3 bg-recampus-red rounded-full border-2 border-white shadow-sm"></div>
+                            <i data-lucide="qr-code" class="w-6 h-6 text-gray-800"></i>
+                            <span class="text-xs font-bold text-gray-800">QRIS</span>
+                        </button>
+                        <button class="border border-gray-200 bg-white p-3 rounded-xl flex flex-col items-center justify-center gap-1 opacity-60 hover:opacity-100 transition">
+                            <i data-lucide="banknote" class="w-6 h-6 text-gray-800"></i>
+                            <span class="text-xs font-bold text-gray-800">Tunai (COD)</span>
+                        </button>
+                        <button class="border border-gray-200 bg-white p-3 rounded-xl flex flex-col items-center justify-center gap-1 opacity-60 hover:opacity-100 transition">
+                            <i data-lucide="landmark" class="w-6 h-6 text-gray-800"></i>
+                            <span class="text-xs font-bold text-gray-800">Transfer</span>
+                        </button>
+                        <button class="border border-gray-200 bg-white p-3 rounded-xl flex flex-col items-center justify-center gap-1 opacity-60 hover:opacity-100 transition">
+                            <i data-lucide="credit-card" class="w-6 h-6 text-gray-800"></i>
+                            <span class="text-xs font-bold text-gray-800">Gopay/OVO</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6">
+                    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Rincian Pembayaran</h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between text-gray-600">
+                            <span>Subtotal Produk</span>
+                            <span>Rp 150.000</span>
+                        </div>
+                        <div class="flex justify-between text-gray-600">
+                            <span>Subtotal Pengiriman</span>
+                            <span>Rp 0</span>
+                        </div>
+                        <div class="flex justify-between text-gray-600">
+                            <span>Biaya Layanan</span>
+                            <span>Rp 1.000</span>
+                        </div>
+                        <div class="flex justify-between text-green-600 font-medium">
+                            <span>Diskon Pengiriman</span>
+                            <span>-Rp 0</span>
+                        </div>
+                        <hr class="border-dashed border-gray-200 my-2">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-gray-800 text-base">Total Pembayaran</span>
+                            <span class="font-bold text-recampus-red text-lg">Rp 151.000</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="absolute bottom-0 w-full bg-white border-t border-gray-200 px-5 py-4 pb-8 z-50 flex justify-between items-center shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+                <div>
+                    <p class="text-xs text-gray-500">Total Tagihan</p>
+                    <p class="text-lg font-bold text-gray-800">Rp 151.000</p>
+                </div>
+                <button onclick="processCheckout()" class="bg-recampus-red text-white font-bold py-3 px-8 rounded-xl shadow-lg hover:bg-recampus-dark transition active:scale-95 flex items-center gap-2">
+                    Buat Pesanan <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Order History List View -->
+        <div id="view-order-history" class="absolute inset-0 z-[70] bg-bg-cream flex flex-col hidden transition-transform duration-300 translate-x-full">
+            <div class="pt-14 pb-3 px-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10">
+                <button onclick="closeOrderHistory()" class="p-2 hover:bg-gray-50 rounded-full"><i data-lucide="arrow-left" class="w-6 h-6 text-gray-700"></i></button>
+                <h1 class="text-lg font-bold text-gray-800">Order History</h1>
+                <div class="w-10"></div> 
+            </div>
+            <div class="flex-1 overflow-y-auto no-scrollbar pb-24 px-4 pt-6 space-y-4">
+                <!-- Order Item -->
+                <div onclick="openOrderDetail()" class="bg-white p-4 rounded-xl shadow-sm border border-white cursor-pointer active:scale-95 transition">
+                     <div class="flex justify-between items-start mb-3">
+                         <div>
+                             <p class="text-xs text-gray-500">Order #879234</p>
+                             <p class="text-xs text-gray-400">12 Des 2025</p>
+                         </div>
+                         <span class="px-3 py-1 bg-black text-white text-[10px] rounded-full font-bold">Shipped</span>
+                     </div>
+                     <div class="flex gap-3">
+                         <div class="w-16 h-16 bg-gray-100 rounded-lg bg-cover bg-center" style="background-image: url('https://raw.githubusercontent.com/abelliaayu28/FINALPROJECTIBS/refs/heads/main/kemeja%20wispie.jpeg')"></div>
+                         <div>
+                             <h4 class="text-sm font-bold text-gray-800 line-clamp-1">Kemeja Wispie M</h4>
+                             <p class="text-xs text-gray-500">Qty: 1</p>
+                             <p class="text-sm font-bold text-recampus-red mt-1">Rp 60.000</p>
+                         </div>
+                     </div>
+                </div>
+                <!-- Another Order Item -->
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-white cursor-pointer active:scale-95 transition opacity-60">
+                     <div class="flex justify-between items-start mb-3">
+                         <div>
+                             <p class="text-xs text-gray-500">Order #879110</p>
+                             <p class="text-xs text-gray-400">10 Nov 2025</p>
+                         </div>
+                         <span class="px-3 py-1 bg-green-100 text-green-700 text-[10px] rounded-full font-bold">Completed</span>
+                     </div>
+                     <div class="flex gap-3">
+                         <div class="w-16 h-16 bg-gray-100 rounded-lg bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80')"></div>
+                         <div>
+                             <h4 class="text-sm font-bold text-gray-800 line-clamp-1">Kalkulus Purcell</h4>
+                             <p class="text-xs text-gray-500">Qty: 1</p>
+                             <p class="text-sm font-bold text-recampus-red mt-1">Rp 150.000</p>
+                         </div>
+                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Detail View -->
+        <div id="view-order-detail" class="absolute inset-0 z-[75] bg-bg-cream flex flex-col hidden transition-transform duration-300 translate-x-full">
+            <div class="pt-14 pb-3 px-4 flex justify-between items-center sticky top-0 z-10 bg-bg-cream">
+                <button onclick="closeOrderDetail()" class="p-2 hover:bg-white rounded-full"><i data-lucide="arrow-left" class="w-6 h-6 text-gray-700"></i></button>
+                <h1 class="text-lg font-bold text-gray-800">Detail Order</h1>
+                <button class="p-2 hover:bg-white rounded-full"><i data-lucide="bell" class="w-6 h-6 text-gray-700"></i></button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto no-scrollbar pb-32 px-5 pt-2">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-gray-800">Order <span class="text-recampus-red">#879234</span></h2>
+                    <span class="px-4 py-1.5 bg-text-dark text-white text-xs rounded-full font-bold">Shipped</span>
+                </div>
+
+                <h3 class="text-sm font-bold text-gray-800 mb-3">Your Items</h3>
+                <div class="space-y-3 mb-6">
+                    <div class="bg-white p-3 rounded-xl shadow-sm flex gap-3 items-center">
+                         <div class="w-16 h-16 bg-gray-100 rounded-lg bg-cover bg-center shrink-0" style="background-image: url('https://raw.githubusercontent.com/abelliaayu28/FINALPROJECTIBS/refs/heads/main/kemeja%20wispie.jpeg')"></div>
+                         <div class="flex-1">
+                             <div class="flex justify-between items-start">
+                                 <h4 class="text-sm font-bold text-gray-800 line-clamp-2 pr-2">Kemeja Wispie M - White</h4>
+                                 <p class="text-sm font-bold text-recampus-red">Rp 60.000</p>
+                             </div>
+                             <p class="text-xs text-gray-400 mt-1">Qty : 1</p>
+                         </div>
+                    </div>
+                     <div class="bg-white p-3 rounded-xl shadow-sm flex gap-3 items-center">
+                         <div class="w-16 h-16 bg-gray-100 rounded-lg bg-cover bg-center shrink-0" style="background-image: url('https://raw.githubusercontent.com/abelliaayu28/FINALPROJECTIBS/refs/heads/main/rice%20cooker.jpeg')"></div>
+                         <div class="flex-1">
+                             <div class="flex justify-between items-start">
+                                 <h4 class="text-sm font-bold text-gray-800 line-clamp-2 pr-2">Rice Cooker Mini</h4>
+                                 <p class="text-sm font-bold text-recampus-red">Rp 50.000</p>
+                             </div>
+                             <p class="text-xs text-gray-400 mt-1">Qty : 1</p>
+                         </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl shadow-sm mb-6">
+                    <p class="text-xs text-gray-400 mb-2">Shipping to</p>
+                    <p class="text-sm font-medium text-gray-800 leading-relaxed">
+                        Gedung Perpustakaan Pusat (Lobby Depan), Kampus ITS Sukolilo, Surabaya, 60111
+                    </p>
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="text-sm font-bold text-gray-800 mb-3">Payment method</h3>
+                    <div class="bg-white p-4 rounded-xl shadow-sm flex items-center gap-3">
+                         <i data-lucide="credit-card" class="w-5 h-5 text-blue-600"></i>
+                         <span class="text-sm font-bold text-gray-700">Gopay</span>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="text-sm font-bold text-gray-800 mb-3">Delivery Options</h3>
+                    <div class="bg-white p-4 rounded-xl shadow-sm text-sm text-recampus-red font-medium">
+                         ReCampus Express
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="text-sm font-bold text-gray-800 mb-3">Order Summary</h3>
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-sm text-gray-500"><span>Items Total</span><span class="font-bold text-gray-800">Rp 110.000</span></div>
+                        <div class="flex justify-between text-sm text-gray-500"><span>Discount</span><span class="font-bold text-gray-800">-Rp 5.000</span></div>
+                        <div class="flex justify-between text-sm text-gray-500"><span>Delivery Fee</span><span class="font-bold text-gray-800">Rp 5.000</span></div>
+                        <div class="flex justify-between text-sm text-gray-500"><span>Tax</span><span class="font-bold text-gray-800">Rp 1.000</span></div>
+                        <div class="flex justify-between text-base mt-2 pt-2 border-t border-gray-200"><span class="font-bold text-gray-800">Total</span><span class="font-bold text-recampus-red text-xl">Rp 111.000</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="absolute bottom-0 w-full bg-white border-t border-gray-200 px-5 py-4 pb-8 z-20 flex gap-4">
+                <button class="flex-1 py-3.5 border border-gray-300 rounded-full text-sm font-bold text-gray-700 hover:bg-gray-50">Track Order</button>
+                <button class="flex-1 py-3.5 bg-text-dark text-white rounded-full text-sm font-bold hover:bg-black shadow-lg">Mark as Received</button>
+            </div>
+        </div>
+
+        <!-- Checkout Success View (Updated) -->
+        <div id="checkout-success" class="absolute inset-0 z-[100] hidden flex items-center justify-center bg-black/50 backdrop-blur-sm fade-in">
+            <div class="bg-white w-[85%] rounded-[2rem] p-6 text-center shadow-2xl relative flex flex-col items-center">                
+                <div class="relative mb-10 w-40 h-40 flex items-center justify-center mx-auto">
+                    <!-- Decorative Circles/Vectors based on user design -->
+                    <div class="absolute inset-0 bg-design-pink/30 rounded-full animate-pulse-soft"></div>
+                    <div class="absolute w-32 h-32 bg-design-pink/50 rounded-full flex items-center justify-center">
+                        <div class="absolute -top-2 -right-2 w-6 h-6 bg-design-red rounded-full opacity-80 animate-float"></div>
+                        <div class="absolute bottom-4 -left-2 w-4 h-4 bg-design-dark-grey rounded-full opacity-60"></div>
+                        
+                        <div class="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-lg relative z-10">
+                            <i data-lucide="check" class="w-12 h-12 text-design-red" stroke-width="4"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <h2 class="text-2xl font-bold text-gray-900 mb-2 font-serif">Pesanan Berhasil!</h2>
+                <p class="text-xs text-gray-500 mb-6 leading-relaxed px-2">
+                    Pesananmu telah diteruskan ke penjual. Silakan tunggu konfirmasi COD di menu riwayat.
+                </p>
+                
+                <div class="w-full bg-gray-50 border border-dashed border-gray-300 rounded-xl py-3 px-4 mb-6 flex flex-col items-center gap-1">
+                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Kode Pesanan</p>
+                    <p class="text-lg font-mono font-bold text-gray-800 tracking-widest">#INV-RC-2025</p>
+                </div>
+
+                <button onclick="closeCheckout()" class="w-full bg-recampus-red text-white font-bold py-3.5 rounded-xl shadow-lg hover:bg-recampus-dark transition transform active:scale-95">
+                    Kembali ke Beranda
+                </button>
+            </div>
+        </div>
+
+        <button id="cs-button" class="absolute bottom-24 right-4 z-50 bg-maroon-cs text-white p-3 rounded-full shadow-xl hover:bg-red-800 transition-transform active:scale-95 animate-pulse-soft hidden flex items-center justify-center border-2 border-white">
+            <i data-lucide="headset" class="w-6 h-6"></i>
+        </button>
+
+        <div id="buyer-nav" class="glass absolute bottom-0 w-full border-t border-gray-200 py-2 px-6 z-40 hidden">
+            <div class="flex justify-between items-center text-gray-400">
+                <button onclick="switchTab('home')" id="nav-home" class="flex flex-col items-center justify-center space-y-1 transition-colors text-recampus-red">
+                    <i data-lucide="home" class="w-6 h-6"></i>
+                    <span class="text-[6px] font-medium">Beranda</span>
+                </button>
+                <button onclick="switchTab('category')" id="nav-category" class="flex flex-col items-center justify-center space-y-1 transition-colors hover:text-recampus-red">
+                    <i data-lucide="grid" class="w-6 h-6"></i>
+                    <span class="text-[6px] font-medium">Kategori</span>
+                </button>
+                <button onclick="switchTab('cart')" id="nav-cart" class="flex flex-col items-center justify-center space-y-1 transition-colors hover:text-recampus-red">
+                    <i data-lucide="shopping-cart" class="w-6 h-6"></i>
+                    <span class="text-[6px] font-medium">Keranjang</span>
+                </button>
+                <button onclick="switchTab('profile')" id="nav-profile" class="flex flex-col items-center justify-center space-y-1 transition-colors hover:text-recampus-red">
+                    <i data-lucide="user" class="w-6 h-6"></i>
+                    <span class="text-[6px] font-medium">Profil</span>
+                </button>
+            </div>
+            <div class="w-1/3 h-1 bg-gray-300 rounded-full mx-auto mt-4 mb-2"></div>
+        </div>
+
+        <div id="modal-buyer-premium" class="absolute inset-0 z-[100] hidden flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <div class="bg-white w-[90%] rounded-[2rem] p-6 text-center shadow-2xl relative fade-in">
+                <button onclick="closeBuyerPremium()" class="absolute top-4 right-4 text-gray-400"><i data-lucide="x" class="w-6 h-6"></i></button>
+                <div class="bg-orange-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-white shadow-lg">
+                    <i data-lucide="crown" class="w-8 h-8 text-orange-500 fill-orange-500"></i>
+                </div>
+                <h2 class="text-xl font-bold text-gray-800">ReCampus Premium</h2>
+                <p class="text-xs text-gray-500 mb-6">Upgrade gaya belanja kampusmu</p>
+                
+                <div class="space-y-4 text-left mb-6">
+                    <div class="flex gap-3">
+                        <div class="bg-orange-50 p-2 rounded-lg h-fit"><i data-lucide="bell" class="w-5 h-5 text-orange-500"></i></div>
+                        <div><h3 class="text-sm font-bold text-gray-800">Notifikasi Harga Turun</h3><p class="text-[10px] text-gray-500">Dapat info duluan pas barang incaran diskon.</p></div>
+                    </div>
+                    <div class="flex gap-3">
+                        <div class="bg-yellow-50 p-2 rounded-lg h-fit"><i data-lucide="zap" class="w-5 h-5 text-yellow-500"></i></div>
+                        <div><h3 class="text-sm font-bold text-gray-800">Pengiriman Instan</h3><p class="text-[10px] text-gray-500">Prioritas kirim & bebas ongkir 5x/bulan.</p></div>
+                    </div>
+                    <div class="flex gap-3">
+                        <div class="bg-blue-50 p-2 rounded-lg h-fit"><i data-lucide="headset" class="w-5 h-5 text-blue-500"></i></div>
+                        <div><h3 class="text-sm font-bold text-gray-800">CS Prioritas 24/7</h3><p class="text-[10px] text-gray-500">Bantuan langsung tanpa antri.</p></div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 p-3 rounded-xl mb-4 border border-gray-100">
+                    <p class="text-sm font-bold text-gray-800"><span class="line-through text-gray-400 text-xs mr-2">Rp 15.000</span>Rp 9.900<span class="text-[10px] font-normal text-gray-500">/bulan</span></p>
+                </div>
+                <button class="w-full bg-gradient-to-r from-orange-400 to-orange-600 text-white font-bold py-3 rounded-xl shadow-lg hover:opacity-90">Coba Gratis 7 Hari</button>
+                <button onclick="closeBuyerPremium()" class="text-xs text-gray-400 mt-4 hover:text-gray-600">Nanti Saja</button>
+            </div>
+        </div>
+
+        <div id="modal-seller-pro" class="absolute inset-0 z-[100] hidden flex items-center justify-center bg-black/80 backdrop-blur-sm">
+            <div class="bg-white w-[90%] rounded-[2rem] p-6 text-center shadow-2xl relative">
+                <div class="bg-[#1a1a1a] w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white shadow-lg -mt-12">
+                    <i data-lucide="crown" class="w-8 h-8 text-yellow-500"></i>
+                </div>
+                <h2 class="text-xl font-bold text-gray-800">Upgrade ke Seller Pro</h2>
+                <p class="text-xs text-gray-500 mb-6">Buka potensi penuh tokomu</p>
+                
+                <div class="space-y-4 text-left mb-6">
+                    <div class="flex gap-3">
+                        <div class="bg-green-50 p-2 rounded-lg h-fit"><i data-lucide="trending-up" class="w-5 h-5 text-green-600"></i></div>
+                        <div><h3 class="text-sm font-bold text-gray-800">Rekomendasi Harga AI</h3><p class="text-[10px] text-gray-500">Tentukan harga jual optimal & notifikasi harga pasar.</p></div>
+                    </div>
+                    <div class="flex gap-3">
+                        <div class="bg-yellow-50 p-2 rounded-lg h-fit"><i data-lucide="award" class="w-5 h-5 text-yellow-600"></i></div>
+                        <div><h3 class="text-sm font-bold text-gray-800">Badge "Recommended"</h3><p class="text-[10px] text-gray-500">Tampil prioritas di pencarian pembeli.</p></div>
+                    </div>
+                    <div class="flex gap-3">
+                        <div class="bg-blue-50 p-2 rounded-lg h-fit"><i data-lucide="pie-chart" class="w-5 h-5 text-blue-600"></i></div>
+                        <div><h3 class="text-sm font-bold text-gray-800">Analisis Mendalam</h3><p class="text-[10px] text-gray-500">Analisis tokomu untuk mendapatkan lebih banyak buyer</p></div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 p-3 rounded-xl mb-4 border border-gray-100">
+                    <p class="text-sm font-bold text-gray-800"><span class="line-through text-gray-400 text-xs mr-2">Rp 15.000</span>Rp 9.000<span class="text-[10px] font-normal text-gray-500">/bulan</span></p>
+                </div>
+                <button class="w-full bg-[#1a1a1a] text-white font-bold py-3 rounded-xl shadow-lg hover:opacity-90">Aktifkan Sekarang</button>
+                <button onclick="closeSellerPro()" class="text-xs text-gray-400 mt-4 hover:text-gray-600">Nanti Saja</button>
+            </div>
+        </div>
+
+        <div id="filter-modal" class="absolute inset-0 z-[70] hidden">
+            <div class="absolute inset-0 bg-black/50 transition-opacity" onclick="toggleFilter()"></div>
+            <div class="absolute bottom-0 w-full bg-white rounded-t-[2rem] p-6 slide-up shadow-2xl">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-bold text-gray-800">Filter</h3>
+                    <button onclick="toggleFilter()"><i data-lucide="x" class="w-6 h-6 text-gray-400"></i></button>
+                </div>
+                <div class="mb-6">
+                    <label class="text-sm font-medium text-gray-700 mb-2 block">Range Harga (Rp)</label>
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+                            <span class="text-xs text-gray-400 block">MIN</span>
+                            <input type="number" placeholder="0" class="w-full bg-transparent text-sm font-bold focus:outline-none">
+                        </div>
+                        <span class="text-gray-400">-</span>
+                        <div class="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+                            <span class="text-xs text-gray-400 block">MAX</span>
+                            <input type="number" placeholder="999.999" class="w-full bg-transparent text-sm font-bold focus:outline-none">
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-8">
+                    <label class="text-sm font-medium text-gray-700 mb-2 block">Lokasi</label>
+                    <div class="flex gap-3">
+                        <button class="px-4 py-2 bg-recampus-light border border-recampus-red text-recampus-red text-sm font-medium rounded-lg">Surabaya</button>
+                        <button class="px-4 py-2 bg-white border border-gray-200 text-gray-500 text-sm font-medium rounded-lg hover:bg-gray-50">Sidoarjo</button>
+                    </div>
+                </div>
+                <button onclick="applyFilter()" class="w-full bg-recampus-red text-white font-bold py-3.5 rounded-xl shadow-lg hover:bg-recampus-dark transition active:scale-95">Pakai Filter</button>
+            </div>
+        </div>
+
+        <div id="view-edit-seller-profile" class="absolute inset-0 z-[70] bg-white flex flex-col hidden transition-transform duration-300 translate-y-full">
+            <div class="pt-14 pb-3 px-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10 shadow-sm">
+                <button onclick="closeSellerEditProfile()" class="p-2 hover:bg-gray-50 rounded-full"><i data-lucide="arrow-left" class="w-6 h-6 text-gray-700"></i></button>
+                <h1 class="text-lg font-bold text-gray-800">Edit Profil Toko</h1>
+                <div class="w-10"></div> 
+            </div>
+            
+            <div class="flex-1 overflow-y-auto no-scrollbar pb-24 px-6 pt-6 bg-gray-50">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-6">
+                    <h2 class="text-sm font-bold text-gray-700 mb-4">Informasi Dasar</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 mb-1">Nama Toko / Penjual</label>
+                            <input type="text" value="James Darjo" class="w-full text-sm font-medium text-gray-800 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-seller-primary bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 mb-1">Bio / Deskripsi Singkat</label>
+                            <textarea rows="2" class="w-full text-sm text-gray-800 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-seller-primary bg-white">Mahasiswa Teknik Sipil ITS angkatan 2021. Jual barang bekas layak pakai.</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-6 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 bg-blue-50 px-3 py-1 rounded-bl-xl text-[10px] text-blue-600 font-bold border-l border-b border-blue-100">
+                        PENTING
+                    </div>
+                    <h2 class="text-sm font-bold text-gray-700 mb-2">Verifikasi Penjual</h2>
+                    <p class="text-xs text-gray-500 mb-4">Upload dokumen untuk mendapatkan badge <span class="text-blue-500 font-bold">Verified</span> dan meningkatkan kepercayaan pembeli.</p>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-2 flex items-center gap-1">
+                                <i data-lucide="credit-card" class="w-3 h-3"></i> Foto KTM (Kartu Tanda Mahasiswa)
+                            </label>
+                            <div class="border-2 border-dashed border-gray-300 rounded-xl p-4 flex flex-col items-center justify-center text-center hover:bg-gray-50 hover:border-seller-primary transition cursor-pointer group">
+                                <div class="bg-gray-100 p-3 rounded-full mb-2 group-hover:bg-orange-50 transition">
+                                    <i data-lucide="upload-cloud" class="w-5 h-5 text-gray-400 group-hover:text-seller-primary"></i>
+                                </div>
+                                <span class="text-xs font-medium text-gray-500 group-hover:text-seller-primary">Klik untuk upload KTM</span>
+                                <input type="file" class="hidden">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-2 flex items-center gap-1">
+                                <i data-lucide="user-check" class="w-3 h-3"></i> Foto KTP (Identitas Asli)
+                            </label>
+                            <div class="border-2 border-dashed border-gray-300 rounded-xl p-4 flex flex-col items-center justify-center text-center hover:bg-gray-50 hover:border-seller-primary transition cursor-pointer group">
+                                <div class="bg-gray-100 p-3 rounded-full mb-2 group-hover:bg-orange-50 transition">
+                                    <i data-lucide="upload-cloud" class="w-5 h-5 text-gray-400 group-hover:text-seller-primary"></i>
+                                </div>
+                                <span class="text-xs font-medium text-gray-500 group-hover:text-seller-primary">Klik untuk upload KTP</span>
+                                <input type="file" class="hidden">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="absolute bottom-0 w-full bg-white border-t border-gray-200 px-6 py-4 pb-8 z-20 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+                <button onclick="saveSellerVerification()" class="w-full bg-seller-primary text-white font-bold py-3.5 rounded-xl shadow-lg hover:opacity-90 transition active:scale-95 flex items-center justify-center gap-2">
+                    <i data-lucide="save" class="w-4 h-4"></i> Simpan & Ajukan Verifikasi
+                </button>
+            </div>
+        </div>
+
+        <div id="verification-toast" 
+     class="absolute top-16 left-1/2 transform -translate-x-1/2 
+            bg-gray-800 text-white px-4 py-3 rounded-xl shadow-xl z-[100] 
+            flex items-center gap-3 w-[90%] hidden fade-in">
+            <div class="bg-green-500 rounded-full p-1"><i data-lucide="check" class="w-3 h-3 text-white"></i></div>
+            <div class="text-xs">
+                <p class="font-bold">Data Berhasil Disimpan!</p>
+                <p class="opacity-80">Profil Anda kini Terverifikasi.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        let currentRole = 'buyer'; // Default
+
+        function enterApp() {
+            const splash = document.getElementById('view-splash');
+            const login = document.getElementById('view-login');
+            splash.style.transform = "translateY(-100%)";
+            login.classList.remove('hidden');
+            setTimeout(() => {
+                splash.classList.add('hidden');
+                document.getElementById('status-time').classList.remove('text-gray-800');
+                document.getElementById('status-time').classList.add('text-gray-800'); // Login white bg
+                document.getElementById('status-icons').classList.remove('text-gray-800');
+                document.getElementById('status-icons').classList.add('text-gray-800');
+            }, 500);
+        }
+
+        // --- UPDATED UPLOAD LOGIC ---
+        function checkUploadRequirements() {
+            const category = document.getElementById('input-kategori').value;
+            const price = parseInt(document.getElementById('input-harga').value) || 0; 
+
+            // Logic 1: Electronics > 1 Million -> Physical QC
+            if (category === 'Elektronik' && price > 1000000) {
+                document.getElementById('modal-verification-electronic').classList.remove('hidden');
+                return;
+            }
+
+            // Logic 2: Skincare -> Receipt Upload (Optional for Verified Badge)
+            if (category === 'Skincare & MakeUp') {
+                document.getElementById('modal-verification-skincare').classList.remove('hidden');
+                return;
+            }
+
+            // Default: Direct Upload
+            showSuccessModal("Barangmu sudah tayang dan bisa dilihat oleh mahasiswa lain.");
+        }
+
+        function closeVerificationElectronic(isConfirmed) {
+            document.getElementById('modal-verification-electronic').classList.add('hidden');
+            if(isConfirmed) {
+                // Redirect to Product Settings with "Pending QC" status
+                // In real app, this would save status to DB
+                openProductSettings();
+            }
+        }
+
+        function confirmSkincareUpload(hasReceipt) {
+            document.getElementById('modal-verification-skincare').classList.add('hidden');
+            if(hasReceipt) {
+                showSuccessModal("Struk terkirim! Badge Verified muncul setelah validasi admin.");
+            } else {
+                showSuccessModal("Barang tayang tanpa badge Verified.");
+            }
+        }
+
+        function showSuccessModal(msg) {
+            document.getElementById('upload-success-msg').innerText = msg;
+            document.getElementById('modal-upload-success').classList.remove('hidden');
+        }
+
+        function closeUploadSuccess() {
+             document.getElementById('modal-upload-success').classList.add('hidden');
+             openProductSettings();
+        }
+
+        function openProductSettings() {
+            const view = document.getElementById('view-product-settings');
+            view.classList.remove('hidden');
+            setTimeout(() => { view.classList.remove('translate-x-full'); }, 10);
+            lucide.createIcons();
+        }
+
+        function closeProductSettings() {
+            const view = document.getElementById('view-product-settings');
+            view.classList.add('translate-x-full');
+            setTimeout(() => { view.classList.add('hidden'); }, 300);
+        }
+        // -------------------------------------
+
+        // --- AUTH & ROLE LOGIC ---
+        function setRole(role) {
+            currentRole = role;
+            const btnBuyer = document.getElementById('btn-role-buyer');
+            const btnSeller = document.getElementById('btn-role-seller');
+
+            if (role === 'buyer') {
+                btnBuyer.classList.remove('text-gray-500', 'hover:bg-gray-200');
+                btnBuyer.classList.add('bg-white', 'text-recampus-red', 'border', 'border-gray-200');
+                
+                btnSeller.classList.remove('bg-white', 'text-recampus-red', 'border', 'border-gray-200');
+                btnSeller.classList.add('text-gray-500', 'hover:bg-gray-200');
+            } else {
+                btnSeller.classList.remove('text-gray-500', 'hover:bg-gray-200');
+                btnSeller.classList.add('bg-white', 'text-recampus-red', 'border', 'border-gray-200');
+                
+                btnBuyer.classList.remove('bg-white', 'text-recampus-red', 'border', 'border-gray-200');
+                btnBuyer.classList.add('text-gray-500', 'hover:bg-gray-200');
+            }
+        }
+
+        function handleLogin() {
+            // Check role and redirect accordingly
+            if (currentRole === 'buyer') {
+                goToHome();
+            } else {
+                switchToSellerMode();
+            }
+        }
+
+        // --- FUNGSI MODIFIED UNTUK SIGN UP LOGIC ---
+        function goToSignUp() {
+            const loginView = document.getElementById('view-login');
+            const signupView = document.getElementById('view-signup');
+            const sellerSection = document.getElementById('seller-verification-section');
+            const title = document.getElementById('signup-title');
+            const subtitle = document.getElementById('signup-subtitle');
+
+            // Logika Deteksi Role
+            if (currentRole === 'seller') {
+                sellerSection.classList.remove('hidden');
+                title.innerText = "Daftar Penjual";
+                subtitle.innerText = "Jual barangmu ke mahasiswa lain!";
+            } else {
+                sellerSection.classList.add('hidden');
+                title.innerText = "Create Account";
+                subtitle.innerText = "Gabung komunitas ReCampus sekarang!";
+            }
+            
+            loginView.classList.add('hidden');
+            signupView.classList.remove('hidden');
+            signupView.classList.add('slide-left');
+        }
+
+        function backToLogin() {
+            const loginView = document.getElementById('view-login');
+            const signupView = document.getElementById('view-signup');
+            
+            signupView.classList.add('hidden');
+            signupView.classList.remove('slide-left');
+            
+            loginView.classList.remove('hidden');
+            loginView.classList.add('slide-left');
+        }
+
+        function goToHome() {
+            const loginView = document.getElementById('view-login');
+            const signupView = document.getElementById('view-signup');
+            
+            // 1. Prepare Destination (Show it BEHIND the login screen)
+            document.getElementById('main-content').classList.remove('hidden');
+            document.getElementById('buyer-nav').classList.remove('hidden');
+            switchTab('home');
+
+            // 2. Animate Curtain Up
+            // Check which one is active to slide it up
+            if (!loginView.classList.contains('hidden')) {
+                loginView.style.transform = "translateY(-100%)";
+            } else {
+                signupView.style.transform = "translateY(-100%)";
+            }
+
+            // 3. Cleanup after animation
+            setTimeout(() => { 
+                loginView.classList.add('hidden'); 
+                signupView.classList.add('hidden');
+                // Reset transform for next time (optional but good practice)
+                loginView.style.transform = "";
+                signupView.style.transform = "";
+            }, 500);
+        }
+
+        // --- NEW FUNCTIONS FOR MODALS ---
+        function openBuyerPremium() {
+            document.getElementById('modal-buyer-premium').classList.remove('hidden');
+        }
+        function closeBuyerPremium() {
+            document.getElementById('modal-buyer-premium').classList.add('hidden');
+        }
+        function openSellerPro() {
+            document.getElementById('modal-seller-pro').classList.remove('hidden');
+        }
+        function closeSellerPro() {
+            document.getElementById('modal-seller-pro').classList.add('hidden');
+        }
+        
+        // --- PROMO BOOKING LOGIC (NEW) ---
+        function selectPromoType(type) {
+            selectedPromoType = type;
+            document.getElementById('promo-step-1').classList.add('hidden');
+            document.getElementById('promo-step-2').classList.remove('hidden');
+            
+            // Adjust time slots visibility for later
+            const timeSlots = document.getElementById('time-selection-area');
+            if(type === 'live') timeSlots.classList.remove('hidden');
+            else timeSlots.classList.add('hidden');
+        }
+
+        function confirmPromoProducts() {
+            // Check checkbox count (simulated)
+            document.getElementById('promo-step-2').classList.add('hidden');
+            document.getElementById('promo-step-3').classList.remove('hidden');
+            renderCalendar();
+        }
+
+        function backToPromoStep(step) {
+            if(step === 1) {
+                document.getElementById('promo-step-2').classList.add('hidden');
+                document.getElementById('promo-step-1').classList.remove('hidden');
+            } else if(step === 2) {
+                document.getElementById('promo-step-3').classList.add('hidden');
+                document.getElementById('promo-step-2').classList.remove('hidden');
+            }
+        }
+
+        function renderCalendar() {
+            const grid = document.getElementById('calendar-grid');
+            grid.innerHTML = '';
+            
+            // Generate 30 days dummy
+            for(let i=1; i<=31; i++) {
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'p-2 rounded-lg text-xs font-bold transition flex items-center justify-center aspect-square border';
+                dayDiv.innerText = i;
+                
+                // Logic Simulasi Kuota (Rules)
+                if (selectedPromoType === 'video') {
+                    // Week 3 (15-21) is FULL for this seller
+                    if (i >= 15 && i <= 21) {
+                        dayDiv.classList.add('seat-full'); // Red
+                    } else if (i % 5 === 0) {
+                        dayDiv.classList.add('seat-warning'); // Yellow (Low stock)
+                    } else {
+                        dayDiv.classList.add('seat-available'); // Green
+                        dayDiv.onclick = function() { selectDate(this); };
+                    }
+                } else {
+                    // Live: limited quota per day
+                    if (i % 2 === 0) { // Genap Full
+                         dayDiv.classList.add('seat-full');
+                    } else {
+                         dayDiv.classList.add('seat-available');
+                         dayDiv.onclick = function() { selectDate(this); };
+                    }
+                }
+                grid.appendChild(dayDiv);
+            }
+        }
+
+        function selectDate(el) {
+            // Remove previous selection
+            const prev = document.querySelector('.seat-selected');
+            if(prev) prev.classList.remove('seat-selected', 'scale-110');
+            
+            // Add selection
+            el.classList.add('seat-selected');
+        }
+
+        function selectTime(btn) {
+             // Simple visual toggle for time buttons
+             const btns = document.querySelectorAll('#time-selection-area button');
+             btns.forEach(b => {
+                 b.classList.remove('bg-recampus-red', 'text-white');
+                 b.classList.add('text-gray-700');
+             });
+             btn.classList.add('bg-recampus-red', 'text-white');
+             btn.classList.remove('text-gray-700');
+        }
+
+        function submitPromoBooking() {
+             document.getElementById('promo-step-3').classList.add('hidden');
+             document.getElementById('promo-step-success').classList.remove('hidden');
+        }
+
+        // --- SELLER EDIT PROFILE LOGIC (ADDED) ---
+        function openSellerEditProfile() {
+            const view = document.getElementById('view-edit-seller-profile');
+            view.classList.remove('hidden');
+            setTimeout(() => {
+                view.classList.remove('translate-y-full');
+            }, 10);
+        }
+
+        function closeSellerEditProfile() {
+            const view = document.getElementById('view-edit-seller-profile');
+            view.classList.add('translate-y-full');
+            setTimeout(() => {
+                view.classList.add('hidden');
+            }, 300);
+        }
+
+        function saveSellerVerification() {
+            // 1. Tutup halaman edit
+            closeSellerEditProfile();
+
+            // 2. Tampilkan Toast Sukses
+            const toast = document.getElementById('verification-toast');
+            toast.classList.remove('hidden');
+
+            // 3. Update Tampilan Profil (Munculkan Verified Badge)
+            const badge = document.getElementById('seller-verified-badge');
+            const labelVerified = document.getElementById('text-verified-label');
+            const menuStatus = document.getElementById('menu-verified-status');
+            
+            // Hapus hidden
+            badge.classList.remove('hidden');
+            labelVerified.classList.remove('hidden');
+            
+            // Update teks di menu
+            menuStatus.classList.remove('text-red-500');
+            menuStatus.classList.add('text-blue-500');
+            menuStatus.innerText = "Terverifikasi";
+            
+            // Sembunyikan toast setelah 3 detik
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+        // --------------------------------
+
+        function switchToSellerMode() {
+            const loginView = document.getElementById('view-login');
+            const sellerApp = document.getElementById('view-seller-app');
+            
+            // 1. Show Seller App Behind
+            sellerApp.classList.remove('hidden');
+            document.getElementById('status-time').classList.remove('text-gray-800');
+            document.getElementById('status-time').classList.add('text-white');
+            document.getElementById('status-icons').classList.remove('text-gray-800');
+            document.getElementById('status-icons').classList.add('text-white');
+            
+            // 2. Animate Login Up
+            if(!loginView.classList.contains('hidden')){
+                 loginView.style.transition = "transform 0.5s ease-out"; // Ensure transition is active
+                 loginView.style.transform = "translateY(-100%)";
+            }
+
+            // 3. Cleanup
+            setTimeout(() => {
+                loginView.classList.add('hidden');
+                loginView.style.transform = ""; // Reset
+                // ... hide other stuff ...
+                document.getElementById('main-content').classList.add('hidden'); // Ensure buyer stuff hidden
+                document.getElementById('buyer-nav').classList.add('hidden');
+                document.getElementById('cs-button').classList.add('hidden');
+                
+                lucide.createIcons();
+                switchSellerTab('home');
+            }, 500);
+        }
+
+        function switchToBuyerMode() {
+            document.getElementById('view-seller-app').classList.add('hidden');
+            document.getElementById('main-content').classList.remove('hidden');
+            switchTab('profile');
+            document.getElementById('buyer-nav').classList.remove('hidden');
+            // Remove CS button visibility here since it only shows on home
+            // document.getElementById('cs-button').classList.remove('hidden'); 
+        }
+
+        function switchSellerTab(tabName) {
+        // 1. Sembunyikan SEMUA tab dulu (RESET TAMPILAN)
+        document.getElementById('seller-tab-home').classList.add('hidden');
+        document.getElementById('seller-tab-upload').classList.add('hidden');
+        document.getElementById('seller-tab-finance').classList.add('hidden');
+        document.getElementById('seller-tab-profile').classList.add('hidden');
+        
+        // --- INI BARIS YANG SEBELUMNYA HILANG ---
+        document.getElementById('seller-tab-promo').classList.add('hidden'); 
+        // ----------------------------------------
+
+        // 2. Baru munculkan tab yang dipilih
+        document.getElementById('seller-tab-' + tabName).classList.remove('hidden');
+
+        // 3. Atur Subtitle Header & Warna Navigasi (Sama seperti codinganmu sebelumnya)
+        const subtitle = document.getElementById('seller-header-subtitle');
+        if(tabName === 'upload') { subtitle.innerText = 'Tambah Barang Baru'; } 
+        else { subtitle.innerText = 'Kelola tokomu dari sini'; }
+        
+        const navIds = ['s-nav-home', 's-nav-upload', 's-nav-finance', 's-nav-profile'];
+        navIds.forEach(id => {
+            const btn = document.getElementById(id);
+            btn.classList.remove('text-seller-primary');
+            btn.classList.add('text-gray-400');
+            if(id === 's-nav-upload') {
+                const bg = document.getElementById('s-nav-upload-bg');
+                bg.classList.remove('border-[#760504]', 'bg-[#760504]', 'text-white');
+                bg.classList.add('border-gray-300', 'text-gray-400');
+            }
+        });
+        const activeBtn = document.getElementById('s-nav-' + tabName);
+        // Cek dulu apakah tombol nav ada (karena tab promo tidak punya tombol nav bawah)
+        if (activeBtn) {
+            activeBtn.classList.remove('text-gray-400');
+            activeBtn.classList.add('text-seller-primary');
+            if(tabName === 'upload') {
+                const bg = document.getElementById('s-nav-upload-bg');
+                bg.classList.remove('border-gray-300', 'text-gray-400');
+                bg.classList.add('border-[#760504]', 'bg-[#760504]', 'text-white');
+            }
+        }
+    }
+
+        function openProductDetail() { document.getElementById('view-product-detail').classList.remove('hidden'); }
+        function closeProductDetail() { document.getElementById('view-product-detail').classList.add('hidden'); }
+        function openEditProfile() { document.getElementById('view-edit-profile').classList.remove('hidden'); }
+        function closeEditProfile() { document.getElementById('view-edit-profile').classList.add('hidden'); }
+
+        // --- ORDER HISTORY LOGIC ---
+        function openOrderHistory() {
+            const view = document.getElementById('view-order-history');
+            view.classList.remove('hidden');
+            setTimeout(() => { view.classList.remove('translate-x-full'); }, 10);
+        }
+        function closeOrderHistory() {
+            const view = document.getElementById('view-order-history');
+            view.classList.add('translate-x-full');
+            setTimeout(() => { view.classList.add('hidden'); }, 300);
+        }
+        
+        function openOrderDetail() {
+            const view = document.getElementById('view-order-detail');
+            view.classList.remove('hidden');
+            setTimeout(() => { view.classList.remove('translate-x-full'); }, 10);
+        }
+        function closeOrderDetail() {
+            const view = document.getElementById('view-order-detail');
+            view.classList.add('translate-x-full');
+            setTimeout(() => { view.classList.add('hidden'); }, 300);
+        }
+
+        // --- CHECKOUT LOGIC ===================================================================================================================
+        function openCheckout() {
+            document.getElementById('view-checkout').classList.remove('hidden');
+        }
+
+        function closeCheckout() {
+             document.getElementById('view-checkout').classList.add('hidden');
+             document.getElementById('checkout-success').classList.add('hidden');
+        }
+
+        function selectDelivery(element) {
+            // Reset styles
+            const options = document.querySelectorAll('.space-y-2 label');
+            options.forEach(opt => {
+                opt.classList.remove('radio-selected', 'border-transparent');
+                opt.classList.add('border-gray-200');
+                const circle = opt.querySelector('.radio-circle');
+                circle.classList.remove('bg-recampus-red', 'border-transparent');
+                circle.classList.add('border-gray-300');
+                circle.querySelector('div').classList.add('hidden');
+            });
+
+            // Set Active
+            element.classList.add('radio-selected');
+            element.classList.remove('border-gray-200');
+            const activeCircle = element.querySelector('.radio-circle');
+            activeCircle.classList.remove('border-gray-300');
+            activeCircle.classList.add('bg-recampus-red', 'border-transparent');
+            activeCircle.querySelector('div').classList.remove('hidden');
+        }
+
+        function processCheckout() {
+            const btn = document.querySelector('button[onclick="processCheckout()"]');
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Memproses...`;
+            btn.disabled = true;
+            btn.classList.add('opacity-75');
+
+            setTimeout(() => {
+                document.getElementById('checkout-success').classList.remove('hidden');
+                lucide.createIcons();
+                // Reset button for future use
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+                btn.classList.remove('opacity-75');
+            }, 1500);
+        }
+        // ----------------------
+
+        function handleSearch(val) {
+            const defaultView = document.getElementById('home-default-view');
+            const resultView = document.getElementById('search-result-view');
+            if (val.length > 0) { defaultView.classList.add('hidden'); resultView.classList.remove('hidden'); } 
+            else { defaultView.classList.remove('hidden'); resultView.classList.add('hidden'); }
+        }
+
+        function toggleFilter() { document.getElementById('filter-modal').classList.toggle('hidden'); }
+        function applyFilter() { toggleFilter(); alert("Filter diterapkan!"); }
+
+        function logout() {
+            document.getElementById('view-seller-app').classList.add('hidden');
+            document.getElementById('main-content').classList.add('hidden');
+            document.getElementById('buyer-nav').classList.add('hidden');
+            document.getElementById('cs-button').classList.add('hidden');
+            
+            const loginView = document.getElementById('view-login');
+            loginView.classList.remove('hidden');
+            loginView.style.transform = "translateY(0)"; 
+            
+            document.getElementById('status-time').classList.remove('text-white');
+            document.getElementById('status-time').classList.add('text-gray-800');
+            document.getElementById('status-icons').classList.remove('text-white');
+            document.getElementById('status-icons').classList.add('text-gray-800');
+        }
+
+        const homePage = document.getElementById('page-home');
+        const profilePage = document.getElementById('page-profile');
+        // New Pages
+        const categoryPage = document.getElementById('page-category');
+        const cartPage = document.getElementById('page-cart');
+        
+        const headerContainer = document.getElementById('header-container');
+        const headerTitle = document.getElementById('header-title');
+        
+        const navHome = document.getElementById('nav-home');
+        const navProfile = document.getElementById('nav-profile');
+        const navCategory = document.getElementById('nav-category');
+        const navCart = document.getElementById('nav-cart');
+        
+        const statusTime = document.getElementById('status-time');
+        const statusIcons = document.getElementById('status-icons');
+        const csButton = document.getElementById('cs-button');
+
+        function switchTab(tab) {
+            // Hide all buyer pages first
+            homePage.classList.add('hidden');
+            profilePage.classList.add('hidden');
+            categoryPage.classList.add('hidden');
+            cartPage.classList.add('hidden');
+            
+            // Hide CS button by default
+            csButton.classList.add('hidden');
+
+            // Reset Nav Colors
+            [navHome, navProfile, navCategory, navCart].forEach(btn => {
+                btn.classList.remove('text-recampus-red');
+                btn.classList.add('hover:text-recampus-red');
+            });
+
+            // Status Bar Logic Helper
+            const setStatusBarWhite = () => {
+                statusTime.classList.remove('text-gray-800'); statusTime.classList.add('text-white');
+                statusIcons.classList.remove('text-gray-800'); statusIcons.classList.add('text-white');
+            };
+            const setStatusBarDark = () => {
+                statusTime.classList.remove('text-white'); statusTime.classList.add('text-gray-800');
+                statusIcons.classList.remove('text-white'); statusIcons.classList.add('text-gray-800');
+            };
+
+            if (tab === 'home') {
+                homePage.classList.remove('hidden');
+                headerContainer.classList.add('hidden');
+                navHome.classList.add('text-recampus-red');
+                setStatusBarWhite();
+                csButton.classList.remove('hidden'); // Only show CS on home
+            } else if (tab === 'profile') {
+                profilePage.classList.remove('hidden');
+                headerContainer.classList.remove('hidden');
+                headerTitle.innerText = "Profil Saya";
+                navProfile.classList.add('text-recampus-red');
+                setStatusBarDark();
+            } else if (tab === 'category') {
+                categoryPage.classList.remove('hidden');
+                headerContainer.classList.remove('hidden');
+                headerTitle.innerText = "Kategori";
+                navCategory.classList.add('text-recampus-red');
+                setStatusBarDark();
+            } else if (tab === 'cart') {
+                cartPage.classList.remove('hidden');
+                headerContainer.classList.remove('hidden');
+                headerTitle.innerText = "Keranjang";
+                navCart.classList.add('text-recampus-red');
+                setStatusBarDark();
+            }
+        }
+
+        const ctx = document.getElementById('transactionChart').getContext('2d');
+        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(200, 138, 101, 0.4)');
+        gradient.addColorStop(1, 'rgba(200, 138, 101, 0.0)');
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
+                datasets: [{
+                    label: 'Pengeluaran (Rp)',
+                    data: [50000, 150000, 80000, 200000, 120000, 250000],
+                    borderColor: '#760504',
+                    backgroundColor: gradient,
+                    borderWidth: 2,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#760504',
+                    pointRadius: 4,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false }, tooltip: { backgroundColor: '#1E293B', callbacks: { label: function(c) { return 'Rp ' + c.parsed.y.toLocaleString('id-ID'); } } } },
+                scales: { y: { beginAtZero: true, grid: { borderDash: [5, 5], color: '#f0f0f0' }, ticks: { display: false } }, x: { grid: { display: false }, ticks: { font: { size: 10, family: 'Inter' }, color: '#9CA3AF' } } }
+            }
+        });
+
+        // --- NEW FEATURES: CATEGORY LOGIC (FROM REACT) ---
+
+        // Data Produk Dummy (Disalin dari React)
+        const productsDatabase = {
+            buku: [
+                { id: 1, title: 'Kalkulus I angkatan 23', price: 150000, condition: 'Bekas - Mulus', location: 'Gebang', image: "https://github.com/abelliaayu28/FINALPROJECTIBS/blob/main/kalkulus%201.jpeg?raw=true" },
+                { id: 2, title: 'Fisika Dasar + Kalkulus I (paket)', price: 120000, condition: 'Bekas - Coretan Dikit', location: 'Keputih', image: "https://github.com/abelliaayu28/FINALPROJECTIBS/blob/main/kalkulus%202(paket).jpeg?raw=true" },
+                { id: 3, title: 'Novel seporsi mie ayam', price: 200000, condition: 'Baru', location: 'Sukolilo', image: "https://github.com/abelliaayu28/FINALPROJECTIBS/blob/main/novel%20mie%20ayam.jpeg?raw=true" },
+                { id: 4, title: 'Modul Praktikum Kimia', price: 35000, condition: 'Bekas', location: 'Mulyosari', image: 'https://down-id.img.susercontent.com/file/id-11134207-7r98v-lsk9695692qg7e' },
+                { id: 5, title: 'Pengantar Akuntansi 1', price: 85000, condition: 'Bekas - Seperti Baru', location: 'Gebang', image: 'https://down-id.img.susercontent.com/file/id-11134207-7qul0-ljz96169482f83' },
+            ],
+            elektronik: [
+                { id: 101, title: 'Kipas angin kecil', price: 25000, condition: 'Baru', location: 'Keputih', image: "https://github.com/abelliaayu28/FINALPROJECTIBS/blob/main/kipas%20angin%20mini.jpeg?raw=true" },
+                { id: 102, title: 'Mouse Logitech Silent', price: 90000, condition: 'Bekas', location: 'Gebang', image: "https://raw.githubusercontent.com/abelliaayu28/FINALPROJECTIBS/refs/heads/main/mouse.jpeg" },
+                { id: 103, title: 'Kalkulator Scientific Casio', price: 150000, condition: 'Bekas', location: 'Sukolilo', image: "https://raw.githubusercontent.com/abelliaayu28/FINALPROJECTIBS/refs/heads/main/kalkulator%201.jpeg" },
+                { id: 104, title: 'Rice cooker', price: 150000, condition: 'Bekas', location: 'Manyar', image: "https://raw.githubusercontent.com/abelliaayu28/FINALPROJECTIBS/refs/heads/main/rice%20cooker.jpeg" },
+            ],
+            perabot: [
+                { id: 201, title: 'Meja Belajar', price: 45000, condition: 'Bekas', location: 'Keputih', image: "https://raw.githubusercontent.com/abelliaayu28/FINALPROJECTIBS/refs/heads/main/meja%20belajar.jpeg" },
+                { id: 202, title: 'Rak Sepatu Gantung', price: 30000, condition: 'Baru', location: 'Gebang', image: 'https://down-id.img.susercontent.com/file/id-11134207-7r98r-ll993664539g82' },
+                { id: 203, title: 'Galon Aqua Kosong', price: 35000, condition: 'Bekas', location: 'Sukolilo', image: "https://github.com/abelliaayu28/FINALPROJECTIBS/blob/main/galon.jpeg?raw=true" },
+            ],
+            fashion: [
+                { id: 301, title: 'Kemeja Fit Wispie Ukuran M', price: 120000, condition: 'Preloved', location: 'Mulyosari', image: "https://raw.githubusercontent.com/abelliaayu28/FINALPROJECTIBS/refs/heads/main/kemeja%20wispie.jpeg" },
+            ],
+            alattulis: [
+                { id: 401, title: 'Tabung Gambar', price: 25000, condition: 'Baru', location: 'Gebang', image: "https://github.com/abelliaayu28/FINALPROJECTIBS/blob/main/tabung%20gambar.jpeg?raw=true" },
+                { id: 402, title: 'Penggaris Teknik', price: 15000, condition: 'Bekas', location: 'Sukolilo', image: 'https://down-id.img.susercontent.com/file/id-11134207-7qul6-lj294394483f59' },
+            ],
+            care: [
+                { id: 501, title: 'Masker skintific mugwort acne', price: 75000, condition: 'Bekas', location: 'Keputih', image: "https://github.com/abelliaayu28/FINALPROJECTIBS/blob/main/masker%20skintific.jpeg?raw=true" },
+                { id: 502, title: 'Mugort axis-y segel', price: 85000, condition: 'Baru', location: 'Keputih', image: "https://github.com/abelliaayu28/FINALPROJECTIBS/blob/main/mugwort%20axis%20y.jpeg?raw=true" },
+            ]
+        };
+
+        // Logic Membuka Kategori
+        function openCategory(catId, catName) {
+            const resultView = document.getElementById('view-category-result');
+            const grid = document.getElementById('category-result-grid');
+            const title = document.getElementById('category-result-title');
+            const count = document.getElementById('category-result-count');
+            const emptyState = document.getElementById('category-empty-state');
+            const promoBanner = document.getElementById('category-promo-banner');
+
+            // 1. Set Title
+            title.innerText = catName;
+
+            // 2. Ambil Data
+            const products = productsDatabase[catId] || [];
+
+            // 3. Reset Grid
+            grid.innerHTML = '';
+            
+            // 4. Logic Tampilan Kosong / Isi
+            if (products.length === 0) {
+                emptyState.classList.remove('hidden');
+                grid.classList.add('hidden');
+                promoBanner.classList.add('hidden');
+                count.innerText = "Tidak ada barang ditemukan";
+            } else {
+                emptyState.classList.add('hidden');
+                grid.classList.remove('hidden');
+                count.innerText = `Menampilkan ${products.length} barang di sekitar kampus`;
+                
+                // Show banner if more than 2 items (mimic logic)
+                if(products.length > 2) promoBanner.classList.remove('hidden');
+                else promoBanner.classList.add('hidden');
+
+                // Generate HTML Cards
+                products.forEach(product => {
+                    const isBekas = product.condition.includes('Bekas') || product.condition.includes('Preloved');
+                    const badge = isBekas 
+                        ? `<span class="absolute top-2 right-2 bg-yellow-100 text-yellow-800 text-[10px] font-bold px-2 py-0.5 rounded-full z-10 shadow-sm">Bekas</span>` 
+                        : '';
+                    
+                    const cardHtml = `
+                        <div onclick="openProductDetail()" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden active:scale-95 transition-transform duration-100 flex flex-col h-full cursor-pointer">
+                            <div class="w-full h-40 bg-gray-100 relative overflow-hidden">
+                                <img src="${product.image}" alt="${product.title}" class="w-full h-full object-cover object-center" onerror="this.src='https://placehold.co/300x300?text=No+Image'">
+                                ${badge}
+                            </div>
+                            <div class="p-3 flex flex-col flex-1">
+                                <h3 class="font-semibold text-gray-800 text-sm line-clamp-2 mb-1 flex-1">${product.title}</h3>
+                                <p class="text-seller-primary font-bold text-base">Rp ${product.price.toLocaleString('id-ID')}</p>
+                                <div class="flex items-center gap-1 mt-2 text-xs text-gray-500">
+                                    <i data-lucide="map-pin" class="w-3 h-3 text-gray-400 shrink-0"></i>
+                                    <span class="truncate">${product.location}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    grid.innerHTML += cardHtml;
+                });
+            }
+
+            // 5. Tampilkan View
+            resultView.classList.remove('hidden');
+            
+            // Re-init icon lucide untuk konten baru
+            lucide.createIcons();
+        }
+
+        function closeCategoryResult() {
+            const resultView = document.getElementById('view-category-result');
+            resultView.classList.add('hidden');
+        }
+
+        // --- LOGIC STATISTIK PENDAPATAN (BARU) ---
+        let incomeChartInstance = null; // Simpan instance chart agar tidak duplicate
+
+        function openIncomeStats() {
+            const view = document.getElementById('view-income-stats');
+            view.classList.remove('hidden');
+            
+            // Inisialisasi Chart jika belum ada
+            if (!incomeChartInstance) {
+                initIncomeChart();
+            }
+            
+            // Re-init icons untuk view baru
+            lucide.createIcons();
+        }
+
+        function closeIncomeStats() {
+            const view = document.getElementById('view-income-stats');
+            view.classList.add('hidden');
+        }
+
+        function initIncomeChart() {
+            const ctxIncome = document.getElementById('incomeChart').getContext('2d');
+            
+            // Gradient Oranye untuk Seller
+            const gradientIncome = ctxIncome.createLinearGradient(0, 0, 0, 300);
+            gradientIncome.addColorStop(0, 'rgba(200, 121, 82, 0.5)'); // #760504
+            gradientIncome.addColorStop(1, 'rgba(200, 121, 82, 0.0)');
+
+            incomeChartInstance = new Chart(ctxIncome, {
+                type: 'bar', // Tipe grafik batang untuk statistik mingguan
+                data: {
+                    labels: ['M1', 'M2', 'M3', 'M4'],
+                    datasets: [{
+                        label: 'Pemasukan',
+                        data: [350000, 120000, 550000, 153200],
+                        backgroundColor: gradientIncome,
+                        borderColor: '#760504',
+                        borderWidth: 1,
+                        borderRadius: 6,
+                        barThickness: 20,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1E293B',
+                            callbacks: {
+                                label: function(c) { return 'Rp ' + c.parsed.y.toLocaleString('id-ID'); }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { borderDash: [4, 4], color: '#f3f4f6' },
+                            ticks: { display: false } // Sembunyikan angka Y axis agar bersih
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { family: 'Inter', size: 10 }, color: '#9CA3AF' }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
